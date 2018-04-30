@@ -1,35 +1,25 @@
-English | [简体中文](./ReadMe.zh-CN.md)
-
-<p align="center"><a href="#" target="_blank" rel="noopener noreferrer"><img width="550"
-                                                                             src="https://user-images.githubusercontent.com/17680888/39081119-3057bbe2-456e-11e8-862c-646133ad4b43.png"
-                                                                             alt="Day.js"></a></p>
-<p align="center">Fast <b>2kB</b> alternative to Moment.js with the same modern API</p>
-<br>
-<p align="center">
-    <a href="https://unpkg.com/dayjs/dist/dayjs.min.js"><img
-            src="http://img.badgesize.io/https://unpkg.com/dayjs/dist/dayjs.min.js?compression=gzip&style=flat-square"
-            alt="Gzip Size"></a>
-    <a href="https://www.npmjs.com/package/dayjs"><img src="https://img.shields.io/npm/v/dayjs.svg?style=flat-square"
-                                                       alt="NPM Version"></a>
-    <a href="https://travis-ci.org/xx45/dayjs"><img
-            src="https://img.shields.io/travis/xx45/dayjs/master.svg?style=flat-square" alt="Build Status"></a>
-    <a href="https://codecov.io/gh/xx45/dayjs"><img
-            src="https://img.shields.io/codecov/c/github/xx45/dayjs/master.svg?style=flat-square" alt="Codecov"></a>
-    <a href="https://github.com/xx45/dayjs/blob/master/LICENSE"><img
-            src="https://img.shields.io/npm/l/dayjs.svg?style=flat-square" alt="License"></a>
-</p>
+[![npm package](https://img.shields.io/npm/v/@toba/time.svg)](https://www.npmjs.org/package/@toba/time)
+[![Build Status](https://travis-ci.org/toba/time.svg?branch=master)](https://travis-ci.org/toba/time)
+![Code style](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)
+[![Dependencies](https://img.shields.io/david/toba/time.svg)](https://david-dm.org/toba/time)
+[![DevDependencies](https://img.shields.io/david/dev/toba/time.svg)](https://david-dm.org/toba/time#info=devDependencies&view=list)
+[![codecov](https://codecov.io/gh/toba/tools/branch/master/graph/badge.svg)](https://codecov.io/gh/toba/time)
 
 > Day.js is a minimalist JavaScript library for modern browsers with a largely Moment.js-compatible API. If you use Moment.js, you already know how to use Day.js.
 
 ```js
-dayjs().startOf('month').add(1, 'day').set('year', 2018).format('YYYY-MM-DD HH:mm:ss');
+dayjs()
+   .startOf('month')
+   .add(1, 'day')
+   .set('year', 2018)
+   .format('YYYY-MM-DD HH:mm:ss');
 ```
 
-* 🕒 Familiar Moment.js API & patterns
-* 💪 Immutable
-* 🔥 Chainable
-* 📦 2kb mini library
-* 👫 All browsers support
+*  🕒 Familiar Moment.js API & patterns
+*  💪 Immutable
+*  🔥 Chainable
+*  📦 2kb mini library
+*  👫 All browsers support
 
 ---
 
@@ -37,7 +27,7 @@ dayjs().startOf('month').add(1, 'day').set('year', 2018).format('YYYY-MM-DD HH:m
 
 You have multiple ways of getting Day.js:
 
-* Via NPM:
+*  Via NPM:
 
 ```console
 npm install dayjs --save
@@ -48,7 +38,7 @@ var dayjs = require('dayjs');
 dayjs().format();
 ```
 
-* Via CDN:
+*  Via CDN:
 
 ```html
 <!-- Latest compiled and minified JavaScript -->
@@ -58,7 +48,7 @@ dayjs().format();
 </script>
 ```
 
-* Via download and self-hosting:
+*  Via download and self-hosting:
 
 Just download the latest version of Day.js at [https://unpkg.com/dayjs](https://unpkg.com/dayjs)
 
@@ -71,44 +61,44 @@ Instead of modifying the native `Date.prototype`, Day.js creates a wrapper for t
 
 API will always return a new `Dayjs` object if not specified.
 
-* [Parse](#parse)
-  * [Now](#now)
-  * [String](#string)
-  * [Unix Timestamp (milliseconds)](#unix-timestamp-milliseconds)
-  * [Date](#date)
-  * [Clone](#clone)
-  * [Validation](#validation)
-* [Get + Set](#get--set)
-  * [Year](#year)
-  * [Month](#month)
-  * [Date of Month](#date-of-month)
-  * [Hour](#hour)
-  * [Minute](#minute)
-  * [Second](#second)
-  * [Millisecond](#millisecond)
-  * [Set](#set)
-* [Manipulate](#manipulate)
-  * [Add](#add)
-  * [Subtract](#subtract)
-  * [Start of Time](#start-of-time)
-  * [End of Time](#end-of-time)
-* [Display](#display)
-  * [Format](#format)
-  * [Difference](#different)
-  * [Unix Timestamp (milliseconds)](#unix-timestamp-milliseconds-1)
-  * [Unix Timestamp (seconds)](#unix-timestamp-seconds)
-  * [Days in Month](#days-in-month)
-  * [As Javascript Date](#as-javascript-date)
-  * [As Array](#as-array)
-  * [As JSON](#as-json)
-  * [As ISO 8601 String](#as-iso-8601-string)
-  * [As Object](#as-object)
-  * [As String](#as-string)
-* [Query](#query)
-  * [Is Before](#is-before)
-  * [Is Same](#is-same)
-  * [Is After](#is-after)
-  * [Is Leap Year](#is-leap-year)
+*  [Parse](#parse)
+   *  [Now](#now)
+   *  [String](#string)
+   *  [Unix Timestamp (milliseconds)](#unix-timestamp-milliseconds)
+   *  [Date](#date)
+   *  [Clone](#clone)
+   *  [Validation](#validation)
+*  [Get + Set](#get--set)
+   *  [Year](#year)
+   *  [Month](#month)
+   *  [Date of Month](#date-of-month)
+   *  [Hour](#hour)
+   *  [Minute](#minute)
+   *  [Second](#second)
+   *  [Millisecond](#millisecond)
+   *  [Set](#set)
+*  [Manipulate](#manipulate)
+   *  [Add](#add)
+   *  [Subtract](#subtract)
+   *  [Start of Time](#start-of-time)
+   *  [End of Time](#end-of-time)
+*  [Display](#display)
+   *  [Format](#format)
+   *  [Difference](#different)
+   *  [Unix Timestamp (milliseconds)](#unix-timestamp-milliseconds-1)
+   *  [Unix Timestamp (seconds)](#unix-timestamp-seconds)
+   *  [Days in Month](#days-in-month)
+   *  [As Javascript Date](#as-javascript-date)
+   *  [As Array](#as-array)
+   *  [As JSON](#as-json)
+   *  [As ISO 8601 String](#as-iso-8601-string)
+   *  [As Object](#as-object)
+   *  [As String](#as-string)
+*  [Query](#query)
+   *  [Is Before](#is-before)
+   *  [Is Same](#is-same)
+   *  [Is After](#is-after)
+   *  [Is Leap Year](#is-leap-year)
 
 ---
 
@@ -163,7 +153,7 @@ dayjs().clone();
 
 ### Validation
 
-* returns a Boolean
+*  returns a Boolean
 
 Check whether the `Dayjs` object considers the date invalid.
 
@@ -179,7 +169,7 @@ Get and set date.
 
 #### Year
 
-* returns a Number
+*  returns a Number
 
 Get year.
 
@@ -189,7 +179,7 @@ dayjs().year();
 
 #### Month
 
-* returns a Number
+*  returns a Number
 
 Get month.
 
@@ -199,7 +189,7 @@ dayjs().month();
 
 #### Date of Month
 
-* returns a Number
+*  returns a Number
 
 Get day of the month.
 
@@ -209,7 +199,7 @@ dayjs().date();
 
 #### Hour
 
-* returns a Number
+*  returns a Number
 
 Get hour.
 
@@ -219,7 +209,7 @@ dayjs().hour();
 
 #### Minute
 
-* returns a Number
+*  returns a Number
 
 Get minute.
 
@@ -229,7 +219,7 @@ dayjs().minute();
 
 #### Second
 
-* returns a Number
+*  returns a Number
 
 Get second.
 
@@ -239,7 +229,7 @@ dayjs().second();
 
 #### Millisecond
 
-* returns a Number
+*  returns a Number
 
 Get millisecond.
 
@@ -266,9 +256,9 @@ Once you have a `Dayjs` object, you may want to manipulate it in some way like t
 
 ```js
 dayjs()
-  .startOf('month')
-  .add(1, 'day')
-  .subtract(1, 'year');
+   .startOf('month')
+   .add(1, 'day')
+   .subtract(1, 'year');
 ```
 
 #### Add
@@ -315,7 +305,7 @@ Once parsing and manipulation are done, you need some way to display the `Dayjs`
 
 #### Format
 
-* returns a String
+*  returns a String
 
 Takes a string of tokens and replaces them with their corresponding date values.
 
@@ -350,7 +340,7 @@ List of all available formats:
 
 #### Difference
 
-* returns a Number
+*  returns a Number
 
 Get the difference of two `Dayjs` object in milliseconds or other unit.
 
@@ -361,7 +351,7 @@ dayjs().diff(dayjs(), 'years'); // 0
 
 #### Unix Timestamp (milliseconds)
 
-* returns a Number
+*  returns a Number
 
 Outputs the number of milliseconds since the Unix Epoch
 
@@ -371,7 +361,7 @@ dayjs().valueOf();
 
 #### Unix Timestamp (seconds)
 
-* returns a Number
+*  returns a Number
 
 Outputs a Unix timestamp (the number of seconds since the Unix Epoch).
 
@@ -381,7 +371,7 @@ dayjs().unix();
 
 #### Days in Month
 
-* returns a Number
+*  returns a Number
 
 Get the number of days in the current month.
 
@@ -391,7 +381,7 @@ dayjs().daysInMonth();
 
 #### As Javascript Date
 
-* returns a Javascript `Date` object
+*  returns a Javascript `Date` object
 
 Get copy of the native `Date` object from `Dayjs` object.
 
@@ -401,7 +391,7 @@ dayjs().toDate();
 
 #### As Array
 
-* returns a Array
+*  returns a Array
 
 Returns an array that mirrors the parameters from new Date().
 
@@ -411,7 +401,7 @@ dayjs().toArray(); //[2018, 8, 18, 00, 00, 00, 000];
 
 #### As JSON
 
-* returns a JSON String
+*  returns a JSON String
 
 Serializing an `Dayjs` to JSON, will return an ISO8601 string.
 
@@ -421,7 +411,7 @@ dayjs().toJSON(); //"2018-08-08T00:00:00.000Z"
 
 #### As ISO 8601 String
 
-* returns a String
+*  returns a String
 
 Formats a string to the ISO8601 standard.
 
@@ -431,7 +421,7 @@ dayjs().toISOString();
 
 #### As Object
 
-* returns a Object
+*  returns a Object
 
 Returns an object with year, month ... millisecond.
 
@@ -441,7 +431,7 @@ dayjs().toObject(); // { years:2018, months:8, date:18, hours:0, minutes:0, seco
 
 #### As String
 
-* returns a String
+*  returns a String
 
 ```js
 dayjs().toString();
@@ -453,7 +443,7 @@ dayjs().toString();
 
 #### Is Before
 
-* returns a Boolean
+*  returns a Boolean
 
 Check if a `Dayjs` object is before another `Dayjs` object.
 
@@ -464,7 +454,7 @@ dayjs().isBefore(dayjs()); // false
 
 #### Is Same
 
-* returns a Boolean
+*  returns a Boolean
 
 Check if a `Dayjs` object is same as another `Dayjs` object.
 
@@ -475,7 +465,7 @@ dayjs().isSame(dayjs()); // true
 
 #### Is After
 
-* returns a Boolean
+*  returns a Boolean
 
 Check if a `Dayjs` object is after another `Dayjs` object.
 
@@ -486,7 +476,7 @@ dayjs().isAfter(dayjs()); // false
 
 #### Is Leap Year
 
-* returns a Boolean
+*  returns a Boolean
 
 Check if a year is a leap year.
 
