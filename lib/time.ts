@@ -277,19 +277,15 @@ export class DateTime {
          case Time.Year:
             result /= 12;
             break;
-         case C.M:
+         case Time.Month:
             break;
-         case C.Q:
+         case Time.Quarter:
             result /= 3;
             break;
          case Time.Week:
-            result = diff / C.MILLISECONDS_A_WEEK;
-            break;
          case Time.Day:
-            result = diff / C.MILLISECONDS_A_DAY;
-            break;
          case Time.Second:
-            result = diff / C.MILLISECONDS_A_SECOND;
+            result = diff / unit;
             break;
          default:
             // milliseconds
