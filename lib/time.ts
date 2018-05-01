@@ -197,18 +197,21 @@ export class DateTime {
       return this.initialize();
    }
 
-   set(unit: Time, value: number) {
+   set(unit: Time, value: number): DateTime {
       return is.number(value) ? this.clone().update(unit, value) : this;
    }
 
    add(value: number, unit: Time): DateTime {
-      if (['M', C.M].indexOf(unit) > -1) {
-         let date = this.set(C.DATE, 1).set(C.M, this.$M + value);
-         date = date.set(C.DATE, Math.min(this.dayOfMonth, date.daysInMonth()));
+      if (unit == Time.Month) {
+         let date = this.set(Time.Month, 1).set(unit, this.month + value);
+         date = date.set(
+            Time.Month,
+            Math.min(this.dayOfMonth, date.daysInMonth)
+         );
          return date;
       }
-      if (['y', C.Y].indexOf(unit) > -1) {
-         return this.set(C.Y, this.$y + value);
+      if (unit == Time.Year) {
+         return this.set(unit, this.year + value);
       }
       const nextTimeStamp = this.valueOf() + value * unit;
       return new DateTime(nextTimeStamp);
