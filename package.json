@@ -7,10 +7,7 @@
       "access": "public"
    },
    "main": "index.ts",
-   "files": [
-      "index.ts",
-      "lib/time.ts"
-   ],
+   "files": ["index.ts", "lib/time.ts"],
    "scripts": {
       "test": "jest"
    },
@@ -30,7 +27,7 @@
       "typescript": "^2.8.0"
    },
    "dependencies": {
-      "@toba/tools": "^2.3.0"
+      "@toba/tools": "^3.0.0"
    },
    "prettier": {
       "singleQuote": true,

@@ -1,9 +1,9 @@
-import { is, Time, leadingZeros, month, weekday } from '@toba/tools';
+import { is, Duration, leadingZeros, month, weekday } from '@toba/tools';
 import { DateLike } from '../';
 import * as Utils from './utils';
 
 /**
- * Parse
+ * Convert date compatible values into an EcmaScript date.
  */
 function parseDateValue(d?: DateLike): Date {
    if (d === null) {
@@ -30,6 +30,12 @@ function parseDateValue(d?: DateLike): Date {
    return new Date(d);
 }
 
+/**
+ * Convenience methods for working with dates and times, largely compatible with
+ * the `Moment.js` library.
+ *
+ * @see https://momentjs.com/
+ */
 export class DateTime {
    private date: Date;
    timeZoneOffset: number;
@@ -56,14 +62,8 @@ export class DateTime {
       this.timeZoneOffset = d.getTimezoneOffset() / 60;
       this.timeZone = (this.timeZoneOffset - 1)
          .toString()
-         .replace(/^(.)?(\d)/, '$10$200');
-
-      // this.$zoneStr = Utils.padStart(
-      //    String(this.$zone * -1).replace(/^(.)?(\d)/, '$10$200'),
-      //    5,
-      //    '+'
-      // );
-
+         .replace(/^(.)?(\d)/, '$10$200')
+         .padStart(5, '+');
       this.year = d.getFullYear();
       this.month = d.getMonth();
       this.dayOfMonth = d.getDate();
@@ -86,15 +86,15 @@ export class DateTime {
       );
    }
 
-   isSame(other: Time): boolean {
+   isSame(other: Duration): boolean {
       return this.valueOf() === other.valueOf();
    }
 
-   isBefore(other: Time): boolean {
+   isBefore(other: Duration): boolean {
       return this.valueOf() < other.valueOf();
    }
 
-   isAfter(other: Time): boolean {
+   isAfter(other: Duration): boolean {
       return this.valueOf() > other.valueOf();
    }
 
@@ -109,10 +109,14 @@ export class DateTime {
       return this.date.getTime();
    }
 
-   startOf(unit: Time, isStartOf = true): DateTime {
+   /**
+    * DateTime at start or end of a given timespan.
+    * @param isStartOf Whether to return the start boundary
+    */
+   private boundary(unit: Duration, isStartOf = true): DateTime {
       const instanceFactory = (d: number, m: number, y = this.year) => {
          const dt = new DateTime(new Date(y, m, d));
-         return isStartOf ? dt : dt.endOf(Time.Day);
+         return isStartOf ? dt : dt.endOf(Duration.Day);
       };
 
       const instanceFactorySet = (method: string, slice: number) => {
@@ -127,15 +131,15 @@ export class DateTime {
          );
       };
       switch (unit) {
-         case Time.Year:
+         case Duration.Year:
             return isStartOf
                ? instanceFactory(1, 0)
                : instanceFactory(31, 11, this.year);
-         case Time.Month:
+         case Duration.Month:
             return isStartOf
                ? instanceFactory(1, this.month)
                : instanceFactory(0, this.month + 1, this.year);
-         case Time.Week:
+         case Duration.Week:
             return isStartOf
                ? instanceFactory(this.dayOfMonth - this.dayOfWeek, this.month)
                : instanceFactory(
@@ -143,13 +147,13 @@ export class DateTime {
                     this.month,
                     this.year
                  );
-         case Time.Day:
+         case Duration.Day:
             return instanceFactorySet('setHours', 0);
-         case Time.Hour:
+         case Duration.Hour:
             return instanceFactorySet('setMinutes', 1);
-         case Time.Minute:
+         case Duration.Minute:
             return instanceFactorySet('setSeconds', 2);
-         case Time.Second:
+         case Duration.Second:
             return instanceFactorySet('setMilliseconds', 3);
          default:
             return this.clone();
@@ -157,38 +161,45 @@ export class DateTime {
    }
 
    /**
-    * DateTime at the end of given timespan.
+    * DateTime at the beginning of given timespan.
     */
-   endOf(unit: Time): DateTime {
-      return this.startOf(unit, false);
+   startOf(unit: Duration): DateTime {
+      return this.boundary(unit, true);
    }
 
    /**
-    * Update `DateTime` value. This is meant for internal use only
+    * DateTime at the end of given timespan.
+    */
+   endOf(unit: Duration): DateTime {
+      return this.boundary(unit, false);
+   }
+
+   /**
+    * Update `DateTime` value. This is meant for internal use only.
     * @param unit Unit of time to change
     * @param value Value to change it to
     */
-   private update(unit: Time, value: number) {
+   private update(unit: Duration, value: number) {
       switch (unit) {
-         case Time.Day:
+         case Duration.Day:
             this.date.setDate(value);
             break;
-         case Time.Month:
+         case Duration.Month:
             this.date.setMonth(value);
             break;
-         case Time.Year:
+         case Duration.Year:
             this.date.setFullYear(value);
             break;
-         case Time.Hour:
+         case Duration.Hour:
             this.date.setHours(value);
             break;
-         case Time.Minute:
+         case Duration.Minute:
             this.date.setMinutes(value);
             break;
-         case Time.Second:
+         case Duration.Second:
             this.date.setSeconds(value);
             break;
-         case Time.Millisecond:
+         case Duration.Millisecond:
             this.date.setMilliseconds(value);
             break;
          default:
@@ -197,27 +208,27 @@ export class DateTime {
       return this.initialize();
    }
 
-   set(unit: Time, value: number): DateTime {
+   set(unit: Duration, value: number): DateTime {
       return is.number(value) ? this.clone().update(unit, value) : this;
    }
 
-   add(value: number, unit: Time): DateTime {
-      if (unit == Time.Month) {
-         let date = this.set(Time.Month, 1).set(unit, this.month + value);
+   add(value: number, unit: Duration): DateTime {
+      if (unit == Duration.Month) {
+         let date = this.set(Duration.Month, 1).set(unit, this.month + value);
          date = date.set(
-            Time.Month,
+            Duration.Month,
             Math.min(this.dayOfMonth, date.daysInMonth)
          );
          return date;
       }
-      if (unit == Time.Year) {
+      if (unit == Duration.Year) {
          return this.set(unit, this.year + value);
       }
       const nextTimeStamp = this.valueOf() + value * unit;
       return new DateTime(nextTimeStamp);
    }
 
-   subtract(value: number, unit: Time): DateTime {
+   subtract(value: number, unit: Duration): DateTime {
       return this.add(value * -1, unit);
    }
 
@@ -268,26 +279,24 @@ export class DateTime {
       );
    }
 
-   diff(other: DateLike | DateTime, unit: Time, float = false) {
+   diff(other: DateLike | DateTime, unit: Duration, float = false) {
       if (!(other instanceof DateTime)) {
-         other = parseDateValue(other);
+         other = new DateTime(other);
       }
-
-      const that = input instanceof DateTime ? input : new DateTime(input);
-      const diff = this - that;
-      let result = Utils.monthDiff(this, that);
+      const diff = this.valueOf() - other.valueOf();
+      let result = Utils.monthDiff(this, other);
       switch (unit) {
-         case Time.Year:
+         case Duration.Year:
             result /= 12;
             break;
-         case Time.Month:
+         case Duration.Month:
             break;
-         case Time.Quarter:
+         case Duration.Quarter:
             result /= 3;
             break;
-         case Time.Week:
-         case Time.Day:
-         case Time.Second:
+         case Duration.Week:
+         case Duration.Day:
+         case Duration.Second:
             result = diff / unit;
             break;
          default:
@@ -301,13 +310,19 @@ export class DateTime {
     * Number of days in the month.
     */
    get daysInMonth(): number {
-      return this.endOf(Time.Month).dayOfMonth;
+      return this.endOf(Duration.Month).dayOfMonth;
    }
 
+   /**
+    * Create new DateTime instance with same values.
+    */
    clone(): DateTime {
       return new DateTime(this.date);
    }
 
+   /**
+    * Underlying EcmaScript date object.
+    */
    toDate(): Date {
       return this.date;
    }
@@ -332,6 +347,9 @@ export class DateTime {
       return this.toDate().toISOString();
    }
 
+   /**
+    * `moment` compatible object representation.
+    */
    toObject() {
       return {
          years: this.year,
@@ -349,4 +367,7 @@ export class DateTime {
    }
 }
 
+/**
+ * Method to construct a `DateTime` object.
+ */
 export const dateTime = (dateValue?: DateLike) => new DateTime(dateValue);
