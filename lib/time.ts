@@ -86,15 +86,15 @@ export class DateTime {
       );
    }
 
-   isSame(other: Duration): boolean {
+   isSame(other: DateTime): boolean {
       return this.valueOf() === other.valueOf();
    }
 
-   isBefore(other: Duration): boolean {
+   isBefore(other: DateTime): boolean {
       return this.valueOf() < other.valueOf();
    }
 
-   isAfter(other: Duration): boolean {
+   isAfter(other: DateTime): boolean {
       return this.valueOf() > other.valueOf();
    }
 
@@ -212,7 +212,7 @@ export class DateTime {
       return is.number(value) ? this.clone().update(unit, value) : this;
    }
 
-   add(value: number, unit: Duration): DateTime {
+   add(value: number, unit: Duration = Duration.Millisecond): DateTime {
       if (unit == Duration.Month) {
          let date = this.set(Duration.Month, 1).set(unit, this.month + value);
          date = date.set(
@@ -228,14 +228,21 @@ export class DateTime {
       return new DateTime(nextTimeStamp);
    }
 
-   subtract(value: number, unit: Duration): DateTime {
+   subtract(value: number, unit: Duration = Duration.Millisecond): DateTime {
       return this.add(value * -1, unit);
    }
 
+   /**
+    * Difference in milliseconds.
+    */
    minus(other: DateTime): number {
       return this.valueOf() - other.valueOf();
    }
 
+   /**
+    *
+    * @see https://momentjs.com/docs/#/displaying/format/
+    */
    format(pattern = 'YYYY-MM-DDTHH:mm:ssZ') {
       return pattern.replace(
          /Y{2,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|m{1,2}|s{1,2}|Z{1,2}/g,
@@ -283,7 +290,14 @@ export class DateTime {
       );
    }
 
-   diff(other: DateLike | DateTime, unit: Duration, float = false) {
+   /**
+    * @param precise Whether to return unit fractions
+    */
+   diff(
+      other: DateLike | DateTime,
+      unit: Duration = Duration.Millisecond,
+      precise = false
+   ) {
       if (!(other instanceof DateTime)) {
          other = new DateTime(other);
       }
@@ -307,7 +321,7 @@ export class DateTime {
             // milliseconds
             result = diff;
       }
-      return float ? result : Utils.absFloor(result);
+      return precise ? result : Utils.absFloor(result);
    }
 
    /**
@@ -321,14 +335,14 @@ export class DateTime {
     * Create new DateTime instance with same values.
     */
    clone(): DateTime {
-      return new DateTime(this.date);
+      return new DateTime(this.date.getTime());
    }
 
    /**
-    * Underlying EcmaScript date object.
+    * Copy of the underlying EcmaScript date object.
     */
    toDate(): Date {
-      return this.date;
+      return new Date(this.date);
    }
 
    toArray(): number[] {
