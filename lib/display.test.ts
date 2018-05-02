@@ -1,6 +1,6 @@
 import moment from 'moment';
 import MockDate from 'mockdate';
-import { Time } from '@toba/tools';
+import { Duration } from '@toba/tools';
 import { dateTime } from '../';
 
 beforeEach(() => {
@@ -83,8 +83,8 @@ describe('Difference', () => {
 
    it('diff -> in seconds, days, weeks, months, quarters, years ', () => {
       const d1 = dateTime();
-      const d2 = dateTime().add(1000, Time.Day);
-      const d3 = dateTime().subtract(1000, Time.Day);
+      const d2 = dateTime().add(1000, Duration.Day);
+      const d3 = dateTime().subtract(1000, Duration.Day);
       const m1 = moment();
       const m2 = moment().add(1000, 'days');
       const m3 = moment().subtract(1000, 'days');
@@ -98,21 +98,21 @@ describe('Difference', () => {
    });
 
    it('Special diff in month according to moment.js', () => {
-      const dayjsA = dateTime('20160115');
-      const dayjsB = dateTime('20160215');
-      const dayjsC = dateTime('20170115');
-      const momentA = moment('20160115');
-      const momentB = moment('20160215');
-      const momentC = moment('20170115');
+      const d1 = dateTime('20160115');
+      const d2 = dateTime('20160215');
+      const d3 = dateTime('20170115');
+      const m1 = moment('20160115');
+      const m2 = moment('20160215');
+      const m3 = moment('20170115');
       const units = ['months', 'quarters', 'years'];
       units.forEach(unit => {
-         expect(dayjsA.diff(dayjsB, unit)).toBe(momentA.diff(momentB, unit));
-         expect(dayjsA.diff(dayjsB, unit, true)).toBe(
-            momentA.diff(momentB, unit, true)
+         expect(d1.diff(d2, unit)).toBe(m1.diff(m2, unit));
+         expect(d1.diff(d2, unit, true)).toBe(
+            m1.diff(m2, unit, true)
          );
-         expect(dayjsA.diff(dayjsC, unit)).toBe(momentA.diff(momentC, unit));
-         expect(dayjsA.diff(dayjsC, unit, true)).toBe(
-            momentA.diff(momentC, unit, true)
+         expect(d1.diff(d3, unit)).toBe(m1.diff(m3, unit));
+         expect(d1.diff(d3, unit, true)).toBe(
+            m1.diff(m3, unit, true)
          );
       });
    });

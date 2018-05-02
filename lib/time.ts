@@ -232,6 +232,10 @@ export class DateTime {
       return this.add(value * -1, unit);
    }
 
+   minus(other: DateTime): number {
+      return this.valueOf() - other.valueOf();
+   }
+
    format(pattern = 'YYYY-MM-DDTHH:mm:ssZ') {
       return pattern.replace(
          /Y{2,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|m{1,2}|s{1,2}|Z{1,2}/g,

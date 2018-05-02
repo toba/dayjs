@@ -59,8 +59,8 @@ test('Unix Timestamp Number (milliseconds) 1523520536000', () => {
 test('Clone not affect each other', () => {
    const base = dateTime(20170101);
    const year = base.year();
-   const another = base.set('year', year + 1);
-   expect(another.unix() - base.unix()).toBe(31536000);
+   const another = base.set(Duration.Year, year + 1);
+   expect(another.unix - base.unix).toBe(31536000);
 });
 
 test('Clone with same value', () => {

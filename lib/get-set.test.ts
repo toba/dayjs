@@ -1,5 +1,5 @@
 import '@toba/test';
-import { Time } from '@toba/tools';
+import { Duration } from '@toba/tools';
 import moment from 'moment';
 import MockDate from 'mockdate';
 import { dateTime } from '../';
@@ -43,7 +43,7 @@ test('Millisecond', () => {
 test('Set Day', () => {
    expect(
       dateTime()
-         .set(Time.Day, 30)
+         .set(Duration.Day, 30)
          .valueOf()
    ).toBe(
       moment()
@@ -55,7 +55,7 @@ test('Set Day', () => {
 test('Set Month', () => {
    expect(
       dateTime()
-         .set(Time.Month, 11)
+         .set(Duration.Month, 11)
          .valueOf()
    ).toBe(
       moment()
@@ -67,7 +67,7 @@ test('Set Month', () => {
 test('Set Year', () => {
    expect(
       dateTime()
-         .set(Time.Year, 2008)
+         .set(Duration.Year, 2008)
          .valueOf()
    ).toBe(
       moment()
@@ -79,7 +79,7 @@ test('Set Year', () => {
 test('Set Hour', () => {
    expect(
       dateTime()
-         .set(Time.Hour, 6)
+         .set(Duration.Hour, 6)
          .valueOf()
    ).toBe(
       moment()
@@ -91,7 +91,7 @@ test('Set Hour', () => {
 test('Set Minute', () => {
    expect(
       dateTime()
-         .set(Time.Minute, 59)
+         .set(Duration.Minute, 59)
          .valueOf()
    ).toBe(
       moment()
@@ -103,7 +103,7 @@ test('Set Minute', () => {
 test('Set Second', () => {
    expect(
       dateTime()
-         .set(Time.Second, 59)
+         .set(Duration.Second, 59)
          .valueOf()
    ).toBe(
       moment()
@@ -115,7 +115,7 @@ test('Set Second', () => {
 test('Set Millisecond', () => {
    expect(
       dateTime()
-         .set(Time.Millisecond, 999)
+         .set(Duration.Millisecond, 999)
          .valueOf()
    ).toBe(
       moment()
@@ -134,7 +134,7 @@ test('Set Unknown String', () => {
 });
 
 test('Set Not Int', () => {
-   const newDate = dateTime().set(Time.Year, 'Not Int');
+   const newDate = dateTime().set(Duration.Year, 'Not Int');
    expect(newDate.valueOf()).toBe(
       moment()
          .set('year', 'Not Int')
@@ -144,7 +144,7 @@ test('Set Not Int', () => {
 
 test('Immutable Set', () => {
    const d1 = dateTime();
-   const d2 = d1.set(Time.Year, 2011);
+   const d2 = d1.set(Duration.Year, 2011);
    const m1 = moment();
    const m2 = m1.set('year', 2011);
    expect(d1.valueOf()).not.toBe(d2.valueOf());
