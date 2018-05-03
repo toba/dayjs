@@ -102,7 +102,7 @@ test('validates dates', () => {
 test('matches moment shortcut properties', () => {
    expect(dateTime().year).toBe(moment().year());
    expect(dateTime().month).toBe(moment().month());
-   expect(dateTime().toDate()).toBe(moment().date());
+   expect(dateTime().date).toBe(moment().date());
    expect(dateTime().hour).toBe(moment().hour());
    expect(dateTime().minute).toBe(moment().minute());
    expect(dateTime().second).toBe(moment().second());
@@ -161,9 +161,9 @@ test('matches moment difference calculation', () => {
    const m3 = moment().subtract(1000, 'days');
 
    ['2011010', '2013-02-08'].forEach(d => {
-      const setDate = dateTime(d);
-      const setMoment = moment(d);
-      expect(d1.diff(setDate)).toBe(m1.diff(setMoment));
+      const otherDate = dateTime(d);
+      const otherMoment = moment(d);
+      expect(d1.diff(otherDate)).toBe(m1.diff(otherMoment));
    });
 
    ['seconds', 'days', 'weeks', 'months', 'quarters', 'years'].forEach(

@@ -7,7 +7,7 @@
       "access": "public"
    },
    "main": "index.ts",
-   "files": ["index.ts", "lib/time.ts"],
+   "files": ["index.ts", "lib/time.ts", "lib/types.ts"],
    "scripts": {
       "test": "jest"
    },

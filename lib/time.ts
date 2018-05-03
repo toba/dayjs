@@ -58,7 +58,7 @@ export const absFloor = (n: number) =>
  * @see https://momentjs.com/
  */
 export class DateTime {
-   private date: Date;
+   private _date: Date;
    timeZoneOffset: number;
    timeZone: string;
    year: number;
@@ -71,7 +71,7 @@ export class DateTime {
    millisecond: number;
 
    constructor(dateValue?: DateLike) {
-      this.date = parseDateValue(dateValue);
+      this._date = parseDateValue(dateValue);
       this.initialize();
    }
 
@@ -79,7 +79,7 @@ export class DateTime {
     * Update local copies of `Date` values.
     */
    private initialize(): DateTime {
-      const d = this.date;
+      const d = this._date;
       this.timeZoneOffset = d.getTimezoneOffset() / 60;
       this.timeZone = (this.timeZoneOffset - 1)
          .toString()
@@ -98,7 +98,7 @@ export class DateTime {
    }
 
    isValid(): boolean {
-      return !(this.date.toString() === 'Invalid Date');
+      return !(this._date.toString() === 'Invalid Date');
    }
 
    isLeapYear(): boolean {
@@ -119,6 +119,13 @@ export class DateTime {
       return this.valueOf() > other.valueOf();
    }
 
+   /**
+    * Day of month.
+    */
+   get date(): number {
+      return this._date.getDate();
+   }
+
    get unix(): number {
       return Math.floor(this.valueOf() / 1000);
    }
@@ -127,7 +134,7 @@ export class DateTime {
     * Number of milliseconds since midnight, January 1, 1970.
     */
    valueOf() {
-      return this.date.getTime();
+      return this._date.getTime();
    }
 
    /**
@@ -218,25 +225,25 @@ export class DateTime {
    private update(unit: Duration, value: number) {
       switch (unit) {
          case Duration.Day:
-            this.date.setDate(value);
+            this._date.setDate(value);
             break;
          case Duration.Month:
-            this.date.setMonth(value);
+            this._date.setMonth(value);
             break;
          case Duration.Year:
-            this.date.setFullYear(value);
+            this._date.setFullYear(value);
             break;
          case Duration.Hour:
-            this.date.setHours(value);
+            this._date.setHours(value);
             break;
          case Duration.Minute:
-            this.date.setMinutes(value);
+            this._date.setMinutes(value);
             break;
          case Duration.Second:
-            this.date.setSeconds(value);
+            this._date.setSeconds(value);
             break;
          case Duration.Millisecond:
-            this.date.setMilliseconds(value);
+            this._date.setMilliseconds(value);
             break;
          default:
             break;
@@ -371,14 +378,14 @@ export class DateTime {
     * Create new DateTime instance with same values.
     */
    clone(): DateTime {
-      return new DateTime(this.date.getTime());
+      return new DateTime(this._date.getTime());
    }
 
    /**
     * Copy of the underlying EcmaScript date object.
     */
    toDate(): Date {
-      return new Date(this.date);
+      return new Date(this._date);
    }
 
    toArray(): number[] {
@@ -417,7 +424,7 @@ export class DateTime {
    }
 
    toString() {
-      return this.date.toUTCString();
+      return this._date.toUTCString();
    }
 }
 
