@@ -1,11 +1,10 @@
 import { is, Duration, leadingZeros, month, weekday } from '@toba/tools';
 import { DateLike } from '../';
-import * as Utils from './utils';
 
 /**
  * Convert date compatible values into an EcmaScript date.
  */
-function parseDateValue(d?: DateLike): Date {
+export function parseDateValue(d?: DateLike): Date {
    if (d === null) {
       // null yields invalid date
       return new Date(NaN);
@@ -29,6 +28,28 @@ function parseDateValue(d?: DateLike): Date {
    }
    return new Date(d);
 }
+
+/**
+ * Function from moment.js#monthDiff()
+ */
+export const monthDiff = (a: DateTime, b: DateTime) => {
+   const wholeMonthDiff = (b.year - a.year) * 12 + (b.month - a.month);
+   const anchor = a.clone().add(wholeMonthDiff, Duration.Month);
+   let anchor2;
+   let adjust;
+
+   if (b.minus(anchor) < 0) {
+      anchor2 = a.clone().add(wholeMonthDiff - 1, Duration.Month);
+      adjust = b.minus(anchor) / anchor.minus(anchor2);
+   } else {
+      anchor2 = a.clone().add(wholeMonthDiff + 1, Duration.Month);
+      adjust = b.minus(anchor) / anchor2.minus(anchor);
+   }
+   return Number(-(wholeMonthDiff + adjust)) || 0;
+};
+
+export const absFloor = (n: number) =>
+   n < 0 ? Math.ceil(n) || 0 : Math.floor(n);
 
 /**
  * Convenience methods for working with dates and times, largely compatible with
@@ -111,50 +132,65 @@ export class DateTime {
 
    /**
     * DateTime at start or end of a given timespan.
-    * @param isStartOf Whether to return the start boundary
+    * @param isStartOf Return start rather than end boundary
     */
    private boundary(unit: Duration, isStartOf = true): DateTime {
-      const instanceFactory = (d: number, m: number, y = this.year) => {
+      /**
+       * Reset values for hours, minutes, seconds and milliseconds.
+       */
+      const resetUnits = isStartOf ? [0, 0, 0, 0] : [23, 59, 59, 999];
+      /**
+       * Create new DateTime for given month, day and year.
+       */
+      const create = (d: number, m: number, y = this.year): DateTime => {
          const dt = new DateTime(new Date(y, m, d));
          return isStartOf ? dt : dt.endOf(Duration.Day);
       };
 
-      const instanceFactorySet = (method: string, slice: number) => {
-         const start = [0, 0, 0, 0];
-         const end = [23, 59, 59, 999];
+      /**
+       * @param unit Largest unit to maintain (lesser units are reset)
+       */
+      const createAndSet = (unit: Duration): DateTime => {
+         const d = this.toDate();
 
-         return new DateTime(
-            this.toDate()[method].apply(
-               this.toDate(),
-               isStartOf ? start.slice(slice) : end.slice(slice)
-            )
-         );
+         switch (unit) {
+            case Duration.Second:
+               d.setMilliseconds.apply(d, resetUnits.slice(3));
+               break;
+            case Duration.Minute:
+               d.setSeconds.apply(d, resetUnits.slice(2));
+               break;
+            case Duration.Hour:
+               d.setMinutes.apply(d, resetUnits.slice(1));
+               break;
+            case Duration.Day:
+               d.setHours.apply(d, resetUnits.slice(0));
+               break;
+         }
+
+         return new DateTime(d);
       };
+
       switch (unit) {
          case Duration.Year:
-            return isStartOf
-               ? instanceFactory(1, 0)
-               : instanceFactory(31, 11, this.year);
+            return isStartOf ? create(1, 0) : create(31, 11, this.year);
          case Duration.Month:
             return isStartOf
-               ? instanceFactory(1, this.month)
-               : instanceFactory(0, this.month + 1, this.year);
+               ? create(1, this.month)
+               : create(0, this.month + 1, this.year);
          case Duration.Week:
             return isStartOf
-               ? instanceFactory(this.dayOfMonth - this.dayOfWeek, this.month)
-               : instanceFactory(
+               ? create(this.dayOfMonth - this.dayOfWeek, this.month)
+               : create(
                     this.dayOfMonth + (6 - this.dayOfWeek),
                     this.month,
                     this.year
                  );
          case Duration.Day:
-            return instanceFactorySet('setHours', 0);
          case Duration.Hour:
-            return instanceFactorySet('setMinutes', 1);
          case Duration.Minute:
-            return instanceFactorySet('setSeconds', 2);
          case Duration.Second:
-            return instanceFactorySet('setMilliseconds', 3);
+            return createAndSet(unit);
          default:
             return this.clone();
       }
@@ -302,7 +338,7 @@ export class DateTime {
          other = new DateTime(other);
       }
       const diff = this.valueOf() - other.valueOf();
-      let result = Utils.monthDiff(this, other);
+      let result = monthDiff(this, other);
       switch (unit) {
          case Duration.Year:
             result /= 12;
@@ -321,7 +357,7 @@ export class DateTime {
             // milliseconds
             result = diff;
       }
-      return precise ? result : Utils.absFloor(result);
+      return precise ? result : absFloor(result);
    }
 
    /**

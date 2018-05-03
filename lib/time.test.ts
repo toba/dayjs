@@ -13,6 +13,24 @@ const durations: Map<string, Duration> = new Map([
    ['millisecond', Duration.Millisecond]
 ]);
 
+const units: Map<string, Duration> = new Map([
+   ['Y', Duration.Year],
+   ['years', Duration.Year],
+   ['M', Duration.Month],
+   ['months', Duration.Month],
+   ['d', Duration.Day],
+   ['days', Duration.Day],
+   ['w', Duration.Week],
+   ['weeks', Duration.Week],
+   ['h', Duration.Hour],
+   ['hours', Duration.Hour],
+   ['m', Duration.Minute],
+   ['minutes', Duration.Minute],
+   ['s', Duration.Second],
+   ['seconds', Duration.Second],
+   ['milliseconds', Duration.Millisecond]
+]);
+
 beforeEach(() => {
    MockDate.set(new Date());
 });
@@ -101,7 +119,7 @@ test('matches moment duration updates', () => {
             .valueOf()
       ).toBe(
          moment()
-            .set(code, 11)
+            .set(code as moment.unitOfTime.Base, 11)
             .valueOf()
       );
    }
@@ -135,50 +153,47 @@ test('matches moment formatting', () => {
 });
 
 test('matches moment difference calculation', () => {
-   ['2011010', '2013-02-08'].forEach(d => {
-      const d1 = dateTime();
-      const d2 = dateTime(d);
-      const m1 = moment();
-      const m2 = moment(d);
-      expect(d1.diff(d2)).toBe(m1.diff(m2));
-   });
-});
-
-it('diff -> in seconds, days, weeks, months, quarters, years ', () => {
    const d1 = dateTime();
+   const m1 = moment();
    const d2 = dateTime().add(1000, Duration.Day);
    const d3 = dateTime().subtract(1000, Duration.Day);
-   const m1 = moment();
    const m2 = moment().add(1000, 'days');
    const m3 = moment().subtract(1000, 'days');
-   const units = ['seconds', 'days', 'weeks', 'months', 'quarters', 'years'];
-   units.forEach(unit => {
-      expect(d1.diff(d2, unit)).toBe(m1.diff(m2, unit));
-      expect(d1.diff(d2, unit, true)).toBe(m1.diff(m2, unit, true));
-      expect(d1.diff(d3, unit)).toBe(m1.diff(m3, unit));
-      expect(d1.diff(d3, unit, true)).toBe(m1.diff(m3, unit, true));
+
+   ['2011010', '2013-02-08'].forEach(d => {
+      const setDate = dateTime(d);
+      const setMoment = moment(d);
+      expect(d1.diff(setDate)).toBe(m1.diff(setMoment));
    });
+
+   ['seconds', 'days', 'weeks', 'months', 'quarters', 'years'].forEach(
+      (u: moment.unitOfTime.Base) => {
+         const duration = units.get(u);
+         expect(d1.diff(d2, duration)).toBe(m1.diff(m2, u));
+         expect(d1.diff(d2, duration, true)).toBe(m1.diff(m2, u, true));
+         expect(d1.diff(d3, duration)).toBe(m1.diff(m3, u));
+         expect(d1.diff(d3, duration, true)).toBe(m1.diff(m3, u, true));
+      }
+   );
 });
 
-it('Special diff in month according to moment.js', () => {
+test('matches moment diff across months', () => {
    const d1 = dateTime('20160115');
    const d2 = dateTime('20160215');
    const d3 = dateTime('20170115');
    const m1 = moment('20160115');
    const m2 = moment('20160215');
    const m3 = moment('20170115');
-   //const units = ['months', 'quarters', 'years'];
 
-   for (const [code, duration] of durations) {
-      expect(d1.diff(d2, duration)).toBe(m1.diff(m2, code));
-      expect(d1.diff(d2, duration, true)).toBe(m1.diff(m2, code, true));
-   }
-   // units.forEach(unit => {
-   //    expect(d1.diff(d2, unit)).toBe(m1.diff(m2, unit));
-   //    expect(d1.diff(d2, unit, true)).toBe(m1.diff(m2, unit, true));
-   //    expect(d1.diff(d3, unit)).toBe(m1.diff(m3, unit));
-   //    expect(d1.diff(d3, unit, true)).toBe(m1.diff(m3, unit, true));
-   // });
+   ['months', 'quarters', 'years'].forEach((u: moment.unitOfTime.Base) => {
+      const duration = units.get(u);
+      expect(d1.diff(d2, duration)).toBe(m1.diff(m2, u));
+      expect(d1.diff(d2, duration, true)).toBe(m1.diff(m2, u, true));
+      expect(d1.diff(d2, duration)).toBe(m1.diff(m2, u));
+      expect(d1.diff(d2, duration, true)).toBe(m1.diff(m2, u, true));
+      expect(d1.diff(d3, duration)).toBe(m1.diff(m3, u));
+      expect(d1.diff(d3, duration, true)).toBe(m1.diff(m3, u, true));
+   });
 });
 
 test('matches moment days-in-month calculation', () => {
@@ -205,4 +220,76 @@ it('exports EcmaScript date object', () => {
 
    baseDate.setFullYear(1970);
    expect(baseDate.toUTCString()).not.toBe(d.toString());
+});
+
+it('matches moment start/end when no change', () => {
+   expect(
+      dateTime()
+         .startOf(null)
+         .valueOf()
+   ).toBe(
+      moment()
+         .startOf(null)
+         .valueOf()
+   );
+   expect(
+      dateTime()
+         .endOf(null)
+         .valueOf()
+   ).toBe(
+      moment()
+         .endOf(null)
+         .valueOf()
+   );
+});
+
+test('matches moment addition', () => {
+   [
+      's',
+      'seconds',
+      'm',
+      'minutes',
+      'h',
+      'hours',
+      'w',
+      'weeks',
+      'd',
+      'days',
+      'M',
+      'y'
+   ].forEach((u: moment.unitOfTime.Base) => {
+      expect(
+         dateTime()
+            .add(1, units.get(u))
+            .valueOf()
+      ).toBe(
+         moment()
+            .add(1, u)
+            .valueOf()
+      );
+   });
+
+   expect(
+      dateTime('20111031')
+         .add(1, Duration.Month)
+         .valueOf()
+   ).toBe(
+      moment('20111031')
+         .add(1, 'months')
+         .valueOf()
+   );
+});
+
+test('matches moment subtraction', () => {
+   ['days'].forEach((u: moment.unitOfTime.Base) => {
+      expect(
+         dateTime()
+            .subtract(1, units.get(u))
+            .valueOf()
+      ).toBe(
+         moment()
+            .subtract(1, u)
+            .valueOf()
+      );
+   });
 });
