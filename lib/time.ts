@@ -35,19 +35,19 @@ export function parseDateValue(d?: DateLike): Date {
  * @see https://github.com/moment/moment/blob/c58511b94eba1000c1d66b23e9a9ff963ff1cc89/moment.js#L3277
  */
 export const monthsApart = (a: DateTime, b: DateTime) => {
-   const wholeMonthDiff = (b.year - a.year) * 12 + (b.month - a.month);
-   const anchor = a.clone().add(wholeMonthDiff, Duration.Month);
+   const wholeMonths = (b.year - a.year) * 12 + (b.month - a.month);
+   const anchor = a.clone().add(wholeMonths, Duration.Month);
    let anchor2: DateTime;
    let adjust: number;
 
    if (b.minus(anchor) < 0) {
-      anchor2 = a.clone().add(wholeMonthDiff - 1, Duration.Month);
+      anchor2 = a.clone().add(wholeMonths - 1, Duration.Month);
       adjust = b.minus(anchor) / anchor.minus(anchor2);
    } else {
-      anchor2 = a.clone().add(wholeMonthDiff + 1, Duration.Month);
+      anchor2 = a.clone().add(wholeMonths + 1, Duration.Month);
       adjust = b.minus(anchor) / anchor2.minus(anchor);
    }
-   return -(wholeMonthDiff + adjust) || 0;
+   return Math.abs(wholeMonths + adjust);
 };
 
 export const absFloor = (n: number) =>
