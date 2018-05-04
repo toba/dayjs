@@ -5,10 +5,10 @@
 [![DevDependencies](https://img.shields.io/david/dev/toba/time.svg)](https://david-dm.org/toba/time#info=devDependencies&view=list)
 [![codecov](https://codecov.io/gh/toba/tools/branch/master/graph/badge.svg)](https://codecov.io/gh/toba/time)
 
-> Day.js is a minimalist JavaScript library for modern browsers with a largely Moment.js-compatible API. If you use Moment.js, you already know how to use Day.js.
+> @toba/time is a minimalist JavaScript library for modern browsers with a largely Moment.js-compatible API. If you use Moment.js, you already know how to use @toba/time.
 
-```js
-dayjs()
+```ts
+dateTime()
    .startOf('month')
    .add(1, 'day')
    .set('year', 2018)
@@ -33,9 +33,9 @@ You have multiple ways of getting Day.js:
 npm install dayjs --save
 ```
 
-```js
+```ts
 var dayjs = require('dayjs');
-dayjs().format();
+dateTime().format();
 ```
 
 *  Via CDN:
@@ -44,7 +44,7 @@ dayjs().format();
 <!-- Latest compiled and minified JavaScript -->
 <script src="https://unpkg.com/dayjs"></script>
 <script>
-  dayjs().format();
+  dateTime().format();
 </script>
 ```
 
@@ -54,12 +54,12 @@ Just download the latest version of Day.js at [https://unpkg.com/dayjs](https://
 
 ## Getting Started
 
-Instead of modifying the native `Date.prototype`, Day.js creates a wrapper for the Date object, called `Dayjs` object.
-`Dayjs` object is immutable, that is to say, all API operation will return a new `Dayjs` object.
+Instead of modifying the native `Date.prototype`, Day.js creates a wrapper for the Date object, called `DateTime` object.
+`DateTime` object is immutable, that is to say, all API operation will return a new `DateTime` object.
 
 ## API
 
-API will always return a new `Dayjs` object if not specified.
+API will always return a new `DateTime` object if not specified.
 
 *  [Parse](#parse)
    *  [Now](#now)
@@ -104,61 +104,61 @@ API will always return a new `Dayjs` object if not specified.
 
 ### Parse
 
-Simply call `dayjs()` with one of the supported input types.
+Simply call `dateTime()` with one of the supported input types.
 
 #### Now
 
-To get the current date and time, just call dayjs() with no parameters.
+To get the current date and time, just call dateTime() with no parameters.
 
-```js
-dayjs();
+```ts
+dateTime();
 ```
 
 ### String
 
 Creating from a string matches [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) format.
 
-```js
-dayjs(String);
-dayjs('1995-12-25');
+```ts
+dateTime(String);
+dateTime('1995-12-25');
 ```
 
 ### Unix Timestamp (milliseconds)
 
 Passing an integer value representing the number of milliseconds since the Unix Epoch (Jan 1 1970 12AM UTC).
 
-```js
-dayjs(Number);
-dayjs(1318781876406);
+```ts
+dateTime(Number);
+dateTime(1318781876406);
 ```
 
 ### Date
 
 Passing a pre-existing native Javascript Date object.
 
-```js
-dayjs(Date);
-dayjs(new Date(2018, 8, 18));
+```ts
+dateTime(Date);
+dateTime(new Date(2018, 8, 18));
 ```
 
 ### Clone
 
-All `Dayjs` are immutable. If you want a copy of the object, just call `.clone()`.
-Calling dayjs() on a `Dayjs` object will also clone it.
+All `DateTime` are immutable. If you want a copy of the object, just call `.clone()`.
+Calling dateTime() on a `DateTime` object will also clone it.
 
-```js
-dayjs(Dayjs);
-dayjs().clone();
+```ts
+dateTime(Dayjs);
+dateTime().clone();
 ```
 
 ### Validation
 
 *  returns a Boolean
 
-Check whether the `Dayjs` object considers the date invalid.
+Check whether the `DateTime` object considers the date invalid.
 
-```js
-dayjs().isValid();
+```ts
+dateTime().isValid();
 ```
 
 ---
@@ -173,8 +173,8 @@ Get and set date.
 
 Get year.
 
-```js
-dayjs().year();
+```ts
+dateTime().year;
 ```
 
 #### Month
@@ -183,8 +183,8 @@ dayjs().year();
 
 Get month.
 
-```js
-dayjs().month();
+```ts
+dateTime().month;
 ```
 
 #### Date of Month
@@ -193,8 +193,8 @@ dayjs().month();
 
 Get day of the month.
 
-```js
-dayjs().date();
+```ts
+dateTime().date;
 ```
 
 #### Hour
@@ -203,8 +203,8 @@ dayjs().date();
 
 Get hour.
 
-```js
-dayjs().hour();
+```ts
+dateTime().hour;
 ```
 
 #### Minute
@@ -213,8 +213,8 @@ dayjs().hour();
 
 Get minute.
 
-```js
-dayjs().minute();
+```ts
+dateTime().minute;
 ```
 
 #### Second
@@ -223,8 +223,8 @@ dayjs().minute();
 
 Get second.
 
-```js
-dayjs().second();
+```ts
+dateTime().second;
 ```
 
 #### Millisecond
@@ -233,8 +233,8 @@ dayjs().second();
 
 Get millisecond.
 
-```js
-dayjs().millisecond();
+```ts
+dateTime().millisecond;
 ```
 
 #### Set
@@ -242,20 +242,20 @@ dayjs().millisecond();
 Date setter.
 Units are case insensitive
 
-```js
-dayjs().set((unit: String), (value: Int));
-dayjs().set('month', 3); // April
-dayjs().set('second', 30);
+```ts
+dateTime().set((unit: String), (value: Int));
+dateTime().set('month', 3); // April
+dateTime().set('second', 30);
 ```
 
 ---
 
 ### Manipulate
 
-Once you have a `Dayjs` object, you may want to manipulate it in some way like this:
+Once you have a `DateTime` object, you may want to manipulate it in some way like this:
 
-```js
-dayjs()
+```ts
+dateTime()
    .startOf('month')
    .add(1, 'day')
    .subtract(1, 'year');
@@ -263,45 +263,45 @@ dayjs()
 
 #### Add
 
-Returns a new `Dayjs` object by adding time.
+Returns a new `DateTime` object by adding time.
 
-```js
-dayjs().add((value: Number), (unit: String));
-dayjs().add(7, 'day');
+```ts
+dateTime().add((value: Number), (unit: String));
+dateTime().add(7, 'day');
 ```
 
 #### Subtract
 
-Returns a new `Dayjs` object by subtracting time. exactly the same as `dayjs#add`.
+Returns a new `DateTime` object by subtracting time. exactly the same as `dateTime#add`.
 
-```js
-dayjs().subtract((value: Number), (unit: String));
-dayjs().subtract(7, 'year');
+```ts
+dateTime().subtract((value: Number), (unit: String));
+dateTime().subtract(7, 'year');
 ```
 
 #### Start of Time
 
-Returns a new `Dayjs` object by by setting it to the start of a unit of time.
+Returns a new `DateTime` object by by setting it to the start of a unit of time.
 
-```js
-dayjs().startOf((unit: String));
-dayjs().startOf('year');
+```ts
+dateTime().startOf((unit: String));
+dateTime().startOf('year');
 ```
 
 #### End of Time
 
-Returns a new `Dayjs` object by by setting it to the end of a unit of time.
+Returns a new `DateTime` object by by setting it to the end of a unit of time.
 
-```js
-dayjs().endOf((unit: String));
-dayjs().endOf('month');
+```ts
+dateTime().endOf((unit: String));
+dateTime().endOf('month');
 ```
 
 ---
 
 ### Display
 
-Once parsing and manipulation are done, you need some way to display the `Dayjs` object.
+Once parsing and manipulation are done, you need some way to display the `DateTime` object.
 
 #### Format
 
@@ -309,10 +309,10 @@ Once parsing and manipulation are done, you need some way to display the `Dayjs`
 
 Takes a string of tokens and replaces them with their corresponding date values.
 
-```js
-dayjs().format(String);
-dayjs().format(); // "2014-09-08T08:02:17-05:00" (ISO 8601, no fractional seconds)
-dayjs().format('[YYYY] MM-DDTHH:mm:ssZ'); // "[2014] 09-08T08:02:17-05:00"
+```ts
+dateTime().format(String);
+dateTime().format(); // "2014-09-08T08:02:17-05:00" (ISO 8601, no fractional seconds)
+dateTime().format('[YYYY] MM-DDTHH:mm:ssZ'); // "[2014] 09-08T08:02:17-05:00"
 ```
 
 List of all available formats:
@@ -342,11 +342,11 @@ List of all available formats:
 
 *  returns a Number
 
-Get the difference of two `Dayjs` object in milliseconds or other unit.
+Get the difference of two `DateTime` object in milliseconds or other unit.
 
-```js
-dayjs().diff(Dayjs, unit);
-dayjs().diff(dayjs(), 'years'); // 0
+```ts
+dateTime().diff(Dayjs, unit);
+dateTime().diff(dateTime(), 'years'); // 0
 ```
 
 #### Unix Timestamp (milliseconds)
@@ -355,8 +355,8 @@ dayjs().diff(dayjs(), 'years'); // 0
 
 Outputs the number of milliseconds since the Unix Epoch
 
-```js
-dayjs().valueOf();
+```ts
+dateTime().valueOf();
 ```
 
 #### Unix Timestamp (seconds)
@@ -365,8 +365,8 @@ dayjs().valueOf();
 
 Outputs a Unix timestamp (the number of seconds since the Unix Epoch).
 
-```js
-dayjs().unix();
+```ts
+dateTime().unix();
 ```
 
 #### Days in Month
@@ -375,18 +375,18 @@ dayjs().unix();
 
 Get the number of days in the current month.
 
-```js
-dayjs().daysInMonth();
+```ts
+dateTime().daysInMonth();
 ```
 
-#### As Javascript Date
+#### As JavaScript Date
 
-*  returns a Javascript `Date` object
+*  returns a JavaScript `Date` object
 
-Get copy of the native `Date` object from `Dayjs` object.
+Get copy of the native `Date` object from `DateTime` object.
 
-```js
-dayjs().toDate();
+```ts
+dateTime().toDate();
 ```
 
 #### As Array
@@ -395,18 +395,18 @@ dayjs().toDate();
 
 Returns an array that mirrors the parameters from new Date().
 
-```js
-dayjs().toArray(); //[2018, 8, 18, 00, 00, 00, 000];
+```ts
+dateTime().toArray(); //[2018, 8, 18, 00, 00, 00, 000];
 ```
 
 #### As JSON
 
 *  returns a JSON String
 
-Serializing an `Dayjs` to JSON, will return an ISO8601 string.
+Serializing an `DateTime` to JSON, will return an ISO8601 string.
 
-```js
-dayjs().toJSON(); //"2018-08-08T00:00:00.000Z"
+```ts
+dateTime().toJSON(); //"2018-08-08T00:00:00.000Z"
 ```
 
 #### As ISO 8601 String
@@ -415,8 +415,8 @@ dayjs().toJSON(); //"2018-08-08T00:00:00.000Z"
 
 Formats a string to the ISO8601 standard.
 
-```js
-dayjs().toISOString();
+```ts
+dateTime().toISOString();
 ```
 
 #### As Object
@@ -425,16 +425,16 @@ dayjs().toISOString();
 
 Returns an object with year, month ... millisecond.
 
-```js
-dayjs().toObject(); // { years:2018, months:8, date:18, hours:0, minutes:0, seconds:0, milliseconds:0}
+```ts
+dateTime().toObject(); // { years:2018, months:8, date:18, hours:0, minutes:0, seconds:0, milliseconds:0}
 ```
 
 #### As String
 
 *  returns a String
 
-```js
-dayjs().toString();
+```ts
+dateTime().toString();
 ```
 
 ---
@@ -445,33 +445,33 @@ dayjs().toString();
 
 *  returns a Boolean
 
-Check if a `Dayjs` object is before another `Dayjs` object.
+Check if a `DateTime` object is before another `DateTime` object.
 
-```js
-dayjs().isBefore(Dayjs);
-dayjs().isBefore(dayjs()); // false
+```ts
+dateTime().isBefore(DateTime);
+dateTime().isBefore(dateTime()); // false
 ```
 
 #### Is Same
 
 *  returns a Boolean
 
-Check if a `Dayjs` object is same as another `Dayjs` object.
+Check if a `DateTime` object is same as another `DateTime` object.
 
-```js
-dayjs().isSame(Dayjs);
-dayjs().isSame(dayjs()); // true
+```ts
+dateTime().isSame(DateTime);
+dateTime().isSame(dateTime()); // true
 ```
 
 #### Is After
 
 *  returns a Boolean
 
-Check if a `Dayjs` object is after another `Dayjs` object.
+Check if a `DateTime` object is after another `DateTime` object.
 
-```js
-dayjs().isAfter(Dayjs);
-dayjs().isAfter(dayjs()); // false
+```ts
+dateTime().isAfter(DateTime);
+dateTime().isAfter(dateTime()); // false
 ```
 
 #### Is Leap Year
@@ -480,9 +480,9 @@ dayjs().isAfter(dayjs()); // false
 
 Check if a year is a leap year.
 
-```js
-dayjs().isLeapYear();
-dayjs('2000-01-01').isLeapYear(); // true
+```ts
+dateTime().isLeapYear();
+dateTime('2000-01-01').isLeapYear(); // true
 ```
 
 ---
