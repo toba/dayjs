@@ -2,6 +2,7 @@ import '@toba/tools';
 import * as MockDate from 'mockdate';
 import * as moment from 'moment';
 import { dateTime, Duration } from '../';
+import { monthsApart } from './time';
 
 const durations: Map<string, Duration> = new Map([
    ['date', Duration.Day],
@@ -37,6 +38,13 @@ beforeEach(() => {
 
 afterEach(() => {
    MockDate.reset();
+});
+
+test('calculates months apart', () => {
+   const d1 = dateTime();
+   const d2 = d1.add(3, Duration.Month);
+   expect(d2.isSame(d1)).toBe(false);
+   expect(monthsApart(d1, d2)).toBe(3);
 });
 
 test('identifies leap years', () => {
@@ -210,7 +218,7 @@ test('matches moment transforms', () => {
    expect(dateTime().toObject()).toEqual(moment().toObject());
 });
 
-it('exports EcmaScript date object', () => {
+it('exports JavaScript date object', () => {
    const d = dateTime();
    const m = moment();
    const baseDate = d.toDate();

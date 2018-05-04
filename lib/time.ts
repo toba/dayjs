@@ -30,13 +30,15 @@ export function parseDateValue(d?: DateLike): Date {
 }
 
 /**
- * Function from moment.js#monthDiff()
+ * How many months apart are two dates.
+ *
+ * @see https://github.com/moment/moment/blob/c58511b94eba1000c1d66b23e9a9ff963ff1cc89/moment.js#L3277
  */
-export const monthDiff = (a: DateTime, b: DateTime) => {
+export const monthsApart = (a: DateTime, b: DateTime) => {
    const wholeMonthDiff = (b.year - a.year) * 12 + (b.month - a.month);
    const anchor = a.clone().add(wholeMonthDiff, Duration.Month);
-   let anchor2;
-   let adjust;
+   let anchor2: DateTime;
+   let adjust: number;
 
    if (b.minus(anchor) < 0) {
       anchor2 = a.clone().add(wholeMonthDiff - 1, Duration.Month);
@@ -45,11 +47,19 @@ export const monthDiff = (a: DateTime, b: DateTime) => {
       anchor2 = a.clone().add(wholeMonthDiff + 1, Duration.Month);
       adjust = b.minus(anchor) / anchor2.minus(anchor);
    }
-   return Number(-(wholeMonthDiff + adjust)) || 0;
+   return -(wholeMonthDiff + adjust) || 0;
 };
 
 export const absFloor = (n: number) =>
    n < 0 ? Math.ceil(n) || 0 : Math.floor(n);
+
+export function zoneText(zoneOffset: number): string {
+   const hour = zoneOffset * -1;
+   const replacer = hour > -10 && hour < 10 ? '$10$200' : '$1$200';
+   return String(hour)
+      .replace(/^(.)?(\d)/, replacer)
+      .padStart(5, '+');
+}
 
 /**
  * Convenience methods for working with dates and times, largely compatible with
@@ -81,10 +91,7 @@ export class DateTime {
    private initialize(): DateTime {
       const d = this._date;
       this.timeZoneOffset = d.getTimezoneOffset() / 60;
-      this.timeZone = (this.timeZoneOffset - 1)
-         .toString()
-         .replace(/^(.)?(\d)/, '$10$200')
-         .padStart(5, '+');
+      this.timeZone = zoneText(this.timeZoneOffset);
       this.year = d.getFullYear();
       this.month = d.getMonth();
       this.dayOfMonth = d.getDate();
@@ -257,9 +264,9 @@ export class DateTime {
 
    add(value: number, unit: Duration = Duration.Millisecond): DateTime {
       if (unit == Duration.Month) {
-         let date = this.set(Duration.Month, 1).set(unit, this.month + value);
+         let date = this.set(Duration.Day, 1).set(unit, this.month + value);
          date = date.set(
-            Duration.Month,
+            Duration.Day,
             Math.min(this.dayOfMonth, date.daysInMonth)
          );
          return date;
@@ -312,15 +319,15 @@ export class DateTime {
                case 'dddd':
                   return weekday[this.dayOfWeek];
                case 'H':
-                  return this.hour.toString();
+                  return String(this.hour);
                case 'HH':
                   return leadingZeros(this.hour, 2);
                case 'm':
-                  return this.minute.toString();
+                  return String(this.minute);
                case 'mm':
                   return leadingZeros(this.minute, 2);
                case 's':
-                  return this.second.toString();
+                  return String(this.second);
                case 'ss':
                   return leadingZeros(this.second, 2);
                case 'Z':
@@ -345,7 +352,8 @@ export class DateTime {
          other = new DateTime(other);
       }
       const diff = this.valueOf() - other.valueOf();
-      let result = monthDiff(this, other);
+      let result = monthsApart(this, other);
+
       switch (unit) {
          case Duration.Year:
             result /= 12;
