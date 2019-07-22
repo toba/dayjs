@@ -1,7 +1,7 @@
 import '@toba/tools';
 import * as MockDate from 'mockdate';
 import * as moment from 'moment';
-import { dateTime, Duration } from '../';
+import { dateTime, Duration } from './';
 import { monthsApart } from './time';
 
 const durations: Map<string, Duration> = new Map([

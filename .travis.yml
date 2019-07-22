@@ -1,22 +1,22 @@
 language: node_js
 
 node_js:
-  - "9"
+  - "12"
 
 branches:
   only:
-  - master
+    - master
+
+before_install:
+  - npm install --g codecov
 
 script:
-  - yarn global add codecov
-  - yarn test
+  - npm run test
   - codecov
 
 sudo: false
 
-before_install:
-  - curl -o- -L https://yarnpkg.com/install.sh | bash
-  - export PATH="$HOME/.yarn/bin:$PATH"
-
 cache:
-  yarn: true
+  npm: true
+  directories:
+    - node_modules

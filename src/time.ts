@@ -1,5 +1,5 @@
 import { is, Duration, leadingZeros, month, weekday } from '@toba/tools';
-import { DateLike } from '../';
+import { DateLike } from './';
 
 /**
  * Convert date compatible values into an EcmaScript date.
