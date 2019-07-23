@@ -1,3 +1,2 @@
 export { Duration } from '@toba/tools';
-export { DateTime, dateTime } from './time';
-export { DateLike } from './types';
+export { DateTime, dateTime, DateLike } from './time';
