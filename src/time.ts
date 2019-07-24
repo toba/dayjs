@@ -36,7 +36,7 @@ export function parseDateValue(value?: DateLike): Date {
 }
 
 /**
- * Map `Duration` to `Date.set` method names.
+ * Map `Duration` to the `Date` method name used to update that time value.
  */
 const durationMethod: Map<Duration, keyof Date> = new Map([
    [Duration.Year, 'setFullYear'],
@@ -208,16 +208,14 @@ export class DateTime {
 
    /**
     * DateTime at start or end of a given timespan.
-    * @param isStartOf Return start rather than end boundary
+    * @param atStartOf Return start rather than end boundary
     * @see https://github.com/iamkun/dayjs/blob/master/src/index.js#L158
     */
-   private boundary(unit: Duration, isStartOf = true): DateTime {
+   private boundary(unit: Duration, atStartOf = true): DateTime {
       /**
        * Reset values for hours, minutes, seconds and milliseconds.
        */
-      const resetUnits: [number, number, number, number] = isStartOf
-         ? [0, 0, 0, 0]
-         : [23, 59, 59, 999];
+      const resetUnits: number[] = atStartOf ? [0, 0, 0, 0] : [23, 59, 59, 999];
       /**
        * Create new DateTime for given month, day and year.
        */
@@ -225,17 +223,17 @@ export class DateTime {
          const dt = new DateTime(
             this.isUTC ? Date.UTC(y, m, d) : new Date(y, m, d)
          );
-         return isStartOf ? dt : dt.endOf(Duration.Day);
+         return atStartOf ? dt : dt.endOf(Duration.Day);
       };
 
       /**
-       * @param unit Largest unit to maintain (lesser units are reset)
+       * @param unit Most specific unit to retain (smaller units are reset)
        */
       const createAndSet = (unit: Duration): DateTime => {
          const method = this.methodName(unit);
 
          if (method === null) {
-            throw Error('No set method defined for time unit');
+            throw Error(`No set method defined for time unit ${unit} (ms)`);
          }
          const d = this.toDate();
          let slice = 0;
@@ -261,9 +259,9 @@ export class DateTime {
 
       switch (unit) {
          case Duration.Year:
-            return isStartOf ? create(1, 0) : create(31, 11);
+            return atStartOf ? create(1, 0) : create(31, 11);
          case Duration.Month:
-            return isStartOf ? create(1) : create(0, this.month + 1);
+            return atStartOf ? create(1) : create(0, this.month + 1);
          case Duration.Week:
             // TODO: handle locale week start
             // https://github.com/iamkun/dayjs/blob/dev/src/index.js#L184
@@ -273,7 +271,7 @@ export class DateTime {
                   ? this.dayOfWeek + 7
                   : this.dayOfWeek) - weekStartDay;
 
-            return isStartOf
+            return atStartOf
                ? create(this.dayOfMonth - gap)
                : create(this.dayOfMonth + (6 - gap));
          case Duration.Day:
