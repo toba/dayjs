@@ -1,8 +1,58 @@
-import '@toba/tools';
+import '@toba/test';
+import { Month } from '@toba/tools';
 import { dateTime, Duration } from './';
-import { monthsApart, copyAndRound } from './tools';
+import { monthsApart, copyAndRound, roundDate } from './tools';
 
-test.only('copies date-time with rounded time', () => {
+test('rounds date to nearest time unit', () => {
+   const d = new Date(2018, Month.September, 14, 7, 32, 12);
+
+   const expectEndTimes = (t: Date, h = 23, m = 59, s = 59, ms = 999) => {
+      expectStartTimes(t, h, m, s, ms);
+   };
+
+   const expectStartTimes = (t: Date, h = 0, m = 0, s = 0, ms = 0) => {
+      expect(t.getHours()).toBe(h);
+      expect(t.getMinutes()).toBe(m);
+      expect(t.getSeconds()).toBe(s);
+      expect(t.getMilliseconds()).toBe(ms);
+   };
+
+   const minuteStart = roundDate(d, Duration.Minute);
+   const minuteEnd = roundDate(d, Duration.Minute, false);
+
+   expectStartTimes(minuteStart, 7, 32);
+   expect(minuteEnd.getSeconds()).toBe(59);
+   // original object shouldn't be changed
+   expect(d.getSeconds()).toBe(12);
+
+   const dayStart = roundDate(d, Duration.Day);
+   const dayEnd = roundDate(d, Duration.Day, false);
+
+   expectStartTimes(dayStart);
+   expectEndTimes(dayEnd);
+
+   const monthStart = roundDate(d, Duration.Month);
+   const monthEnd = roundDate(d, Duration.Month, false);
+
+   expectStartTimes(monthStart);
+   expect(monthStart.getDate()).toBe(1);
+   expect(monthStart.getHours()).toBe(0);
+
+   expectEndTimes(monthEnd);
+   expect(monthEnd.getDate()).toBe(30);
+   expect(monthEnd.getMinutes()).toBe(59);
+
+   const yearStart = roundDate(d, Duration.Year);
+   const yearEnd = roundDate(d, Duration.Year, false);
+
+   expectStartTimes(yearStart);
+   expect(yearStart.getDate()).toBe(1);
+   expect(yearStart.getMonth()).toBe(0);
+
+   expectEndTimes(yearEnd);
+   expect(yearEnd.getMonth()).toBe(Month.December);
+});
+test('copies date-time with rounded time', () => {
    const dt = dateTime(new Date(2018, 8, 14, 7, 32, 12));
 
    expect(copyAndRound(dt, Duration.Minute).second).toBe(0);

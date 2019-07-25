@@ -1,4 +1,4 @@
-import { Duration, is } from '@toba/tools';
+import { Duration, is, Month } from '@toba/tools';
 import { DateTime } from './time';
 
 /**
@@ -36,7 +36,16 @@ export function parseDateValue(value?: DateLike): Date {
    return new Date(value);
 }
 
-function round(d: Date, unit: Duration, isUTC = false, atStartOf = true): Date {
+/**
+ * Round basic date to nearest `Duration` unit.
+ */
+export function roundDate(
+   base: Date,
+   unit: Duration,
+   atStartOf = true,
+   isUTC = false
+): Date {
+   const d = new Date(base);
    /**
     * Reset values for hours, minutes, seconds and milliseconds.
     */
@@ -48,13 +57,12 @@ function round(d: Date, unit: Duration, isUTC = false, atStartOf = true): Date {
     */
    const create = (
       day: number,
-      m = d.getMonth(),
-      y = d.getFullYear()
-   ): Date => {
-      const r = isUTC ? new Date(Date.UTC(y, m, day)) : new Date(y, m, day);
-      return round(r, Duration.Day, isUTC, atStartOf);
-   };
-   //const d = new Date(base.toDate());
+      m = base.getMonth(),
+      y = base.getFullYear()
+   ): Date =>
+      isUTC
+         ? new Date(Date.UTC(y, m, day, ...timeValues))
+         : new Date(y, m, day, ...timeValues);
 
    switch (unit) {
       case Duration.Second:
@@ -92,17 +100,21 @@ function round(d: Date, unit: Duration, isUTC = false, atStartOf = true): Date {
          // TODO: handle locale week start
          // https://github.com/iamkun/dayjs/blob/dev/src/index.js#L184
          const weekStartDay = 0;
+         const dayOfWeek = d.getDay();
+         const dayOfMonth = d.getDate();
          const gap =
-            (d.getDay() < weekStartDay ? d.getDay() + 7 : d.getDay()) -
+            (dayOfWeek < weekStartDay ? dayOfWeek + 7 : dayOfWeek) -
             weekStartDay;
 
          return atStartOf
-            ? create(d.getDate() - gap)
-            : create(d.getDate() + (6 - gap));
+            ? create(dayOfMonth - gap)
+            : create(dayOfMonth + (6 - gap));
       case Duration.Month:
          return atStartOf ? create(1) : create(0, d.getMonth() + 1);
       case Duration.Year:
-         return atStartOf ? create(1, 0) : create(31, 11);
+         return atStartOf
+            ? create(1, Month.January)
+            : create(31, Month.December);
    }
    return d;
 }
@@ -118,76 +130,8 @@ export const copyAndRound = (
    base: DateTime,
    unit: Duration,
    atStartOf = true
-): DateTime => {
-   /**
-    * Reset values for hours, minutes, seconds and milliseconds.
-    */
-   const timeValues: [number, number, number, number] = atStartOf
-      ? [0, 0, 0, 0]
-      : [23, 59, 59, 999];
-   /**
-    * Create new DateTime for given month, day and year.
-    */
-   const create = (d: number, m = base.month, y = base.year): DateTime => {
-      const dt = new DateTime(
-         base.isUTC ? Date.UTC(y, m, d) : new Date(y, m, d)
-      );
-      return atStartOf ? dt : dt.endOf(Duration.Day);
-   };
-   const d = new Date(base.toDate());
-
-   switch (unit) {
-      case Duration.Second:
-         const s = timeValues.slice(3)[0] as number;
-         if (base.isUTC) {
-            d.setUTCMilliseconds(s);
-         } else {
-            d.setMilliseconds(s);
-         }
-         break;
-      case Duration.Minute:
-         const m = timeValues.slice(2) as [number, number];
-         if (base.isUTC) {
-            d.setUTCSeconds(...m);
-         } else {
-            d.setSeconds(...m);
-         }
-         break;
-      case Duration.Hour:
-         const h = timeValues.slice(2) as [number, number, number];
-         if (base.isUTC) {
-            d.setUTCMinutes(...h);
-         } else {
-            d.setMinutes(...h);
-         }
-         break;
-      case Duration.Day:
-         if (base.isUTC) {
-            d.setUTCHours(...timeValues);
-         } else {
-            d.setHours(...timeValues);
-         }
-         break;
-      case Duration.Week:
-         // TODO: handle locale week start
-         // https://github.com/iamkun/dayjs/blob/dev/src/index.js#L184
-         const weekStartDay = 0;
-         const gap =
-            (base.dayOfWeek < weekStartDay
-               ? base.dayOfWeek + 7
-               : base.dayOfWeek) - weekStartDay;
-
-         return atStartOf
-            ? create(base.dayOfMonth - gap)
-            : create(base.dayOfMonth + (6 - gap));
-      case Duration.Month:
-         return atStartOf ? create(1) : create(0, base.month + 1);
-      case Duration.Year:
-         return atStartOf ? create(1, 0) : create(31, 11);
-   }
-
-   return new DateTime(d);
-};
+): DateTime =>
+   new DateTime(roundDate(base.toDate(), unit, atStartOf, base.isUTC));
 
 /**
  * How many months apart are two dates.
@@ -207,7 +151,7 @@ export const monthsApart = (a: DateTime, b: DateTime) => {
       anchor2 = a.clone().add(wholeMonths + 1, Duration.Month);
       adjust = b.minus(anchor) / anchor2.minus(anchor);
    }
-   return Math.abs(wholeMonths + adjust);
+   return wholeMonths + adjust;
 };
 
 export const absFloor = (n: number) =>

@@ -1,4 +1,12 @@
-import { is, Duration, leadingZeros, month, weekday } from '@toba/tools';
+import {
+   is,
+   Duration,
+   leadingZeros,
+   month,
+   weekday,
+   Month,
+   Weekday
+} from '@toba/tools';
 import {
    DateLike,
    parseDateValue,
@@ -21,8 +29,8 @@ export class DateTime {
    timeZone: string;
    year: number;
    month: number;
-   dayOfMonth: number;
-   dayOfWeek: number;
+   dayOfMonth: Month;
+   dayOfWeek: Weekday;
    hour: number;
    minute: number;
    second: number;
@@ -162,7 +170,7 @@ export class DateTime {
 
             break;
          case Duration.Day:
-            value = this.date + (value - this.dayOfWeek);
+            //value = this.date + (value - this.dayOfWeek);
             _ = this.isUTC ? d.setUTCDate(value) : d.setDate(value);
             break;
          case Duration.Hour:
@@ -213,9 +221,9 @@ export class DateTime {
             // return date;
             return this.set(unit, this.month + value);
          case Duration.Week:
-            return this.set(Duration.Day, this.date + value);
+            return this.set(Duration.Day, this.date + value * 7);
          case Duration.Day:
-            return this.set(unit, this.date + value * 7);
+            return this.set(unit, this.date + value);
          default:
             const nextTimeStamp = this.value + value * unit;
             return new DateTime(nextTimeStamp);
@@ -300,13 +308,13 @@ export class DateTime {
       other: DateLike | DateTime,
       unit: Duration = Duration.Millisecond,
       precise = false
-   ) {
+   ): number {
       if (!(other instanceof DateTime)) {
          other = new DateTime(other);
       }
       const diff = this.value - other.value;
       const zoneDiff = (other.utcOffset() - this.utcOffset()) * Duration.Minute;
-      let result = monthsApart(this, other);
+      let result = monthsApart(other, this);
 
       switch (unit) {
          case Duration.Year:
@@ -375,8 +383,12 @@ export class DateTime {
       return this.esDate.toISOString();
    }
 
-   toString() {
+   toUTCString() {
       return this.esDate.toUTCString();
+   }
+
+   toString() {
+      return this.toISOString();
    }
 
    /**
