@@ -23,14 +23,14 @@
       "url": "https://github.com/toba/time.git"
    },
    "devDependencies": {
-      "@toba/develop": "^6.5.0",
-      "@toba/test": "^3.8.0",
+      "@toba/develop": "^6.6.1",
+      "@toba/test": "^4.1.2",
       "@types/mockdate": "^2.0.0",
       "mockdate": "^2.0.3",
       "moment": "^2.24.0",
       "prettier": "^1.18.2"
    },
    "dependencies": {
-      "@toba/tools": "^6.6.4"
+      "@toba/tools": "^6.6.7"
    }
 }

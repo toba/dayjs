@@ -1,84 +1,12 @@
 import { is, Duration, leadingZeros, month, weekday } from '@toba/tools';
-
-/**
- * Types that can represent a date.
- */
-export type DateLike = Date | string | number;
-
-/**
- * Convert date compatible values into an EcmaScript date. If text, the value
- * is expected to be ordered year, month, day.
- */
-export function parseDateValue(value?: DateLike): Date {
-   if (value === null) {
-      // null yields invalid date
-      return new Date(NaN);
-   }
-   if (value === undefined) {
-      return new Date();
-   }
-   if (is.date(value)) {
-      return value;
-   }
-   if (is.text(value)) {
-      const matches = value.match(/^(\d{4})-?(\d{2})-?(\d{1,2})$/);
-      if (is.array<string>(matches)) {
-         // 2018-08-08 or 20180808
-         const d = parseInt(matches[3]);
-         const m = parseInt(matches[2]) - 1;
-         if (d == 0 || m < 0) {
-            throw Error(`Could not parse date: "${value}"`);
-         }
-         return new Date(parseInt(matches[1]), m, d);
-      }
-   }
-   return new Date(value);
-}
-
-/**
- * Map `Duration` to the `Date` method name used to update that time value.
- */
-const durationMethod: Map<Duration, keyof Date> = new Map([
-   [Duration.Year, 'setFullYear'],
-   [Duration.Month, 'setMonth'],
-   [Duration.Day, 'setDate'],
-   [Duration.Hour, 'setHours'],
-   [Duration.Minute, 'setMinutes'],
-   [Duration.Second, 'setSeconds'],
-   [Duration.Millisecond, 'setMilliseconds']
-]);
-
-/**
- * How many months apart are two dates.
- *
- * @see https://github.com/moment/moment/blob/c58511b94eba1000c1d66b23e9a9ff963ff1cc89/moment.js#L3277
- */
-export const monthsApart = (a: DateTime, b: DateTime) => {
-   const wholeMonths = (b.year - a.year) * 12 + (b.month - a.month);
-   const anchor = a.clone().add(wholeMonths, Duration.Month);
-   let anchor2: DateTime;
-   let adjust: number;
-
-   if (b.minus(anchor) < 0) {
-      anchor2 = a.clone().add(wholeMonths - 1, Duration.Month);
-      adjust = b.minus(anchor) / anchor.minus(anchor2);
-   } else {
-      anchor2 = a.clone().add(wholeMonths + 1, Duration.Month);
-      adjust = b.minus(anchor) / anchor2.minus(anchor);
-   }
-   return Math.abs(wholeMonths + adjust);
-};
-
-export const absFloor = (n: number) =>
-   n < 0 ? Math.ceil(n) || 0 : Math.floor(n);
-
-export function zoneText(zoneOffset: number): string {
-   const hour = zoneOffset * -1;
-   const replacer = hour > -10 && hour < 10 ? '$10$200' : '$1$200';
-   return String(hour)
-      .replace(/^(.)?(\d)/, replacer)
-      .padStart(5, '+');
-}
+import {
+   DateLike,
+   parseDateValue,
+   zoneText,
+   monthsApart,
+   absFloor,
+   copyAndRound
+} from './tools';
 
 /**
  * Convenience methods for working with dates and times, largely compatible with
@@ -194,108 +122,17 @@ export class DateTime {
    }
 
    /**
-    * Name of `Date.set` method for given time unit.
-    */
-   private methodName(unit: Duration): (keyof Date) | null {
-      if (durationMethod.has(unit)) {
-         const name = durationMethod.get(unit)!;
-         return this.isUTC
-            ? (name.replace('set', 'setUTC') as keyof Date)
-            : name;
-      }
-      return null;
-   }
-
-   /**
-    * DateTime at start or end of a given timespan.
-    * @param atStartOf Return start rather than end boundary
-    * @see https://github.com/iamkun/dayjs/blob/master/src/index.js#L158
-    */
-   private boundary(unit: Duration, atStartOf = true): DateTime {
-      /**
-       * Reset values for hours, minutes, seconds and milliseconds.
-       */
-      const resetUnits: number[] = atStartOf ? [0, 0, 0, 0] : [23, 59, 59, 999];
-      /**
-       * Create new DateTime for given month, day and year.
-       */
-      const create = (d: number, m = this.month, y = this.year): DateTime => {
-         const dt = new DateTime(
-            this.isUTC ? Date.UTC(y, m, d) : new Date(y, m, d)
-         );
-         return atStartOf ? dt : dt.endOf(Duration.Day);
-      };
-
-      /**
-       * @param unit Most specific unit to retain (smaller units are reset)
-       */
-      const createAndSet = (unit: Duration): DateTime => {
-         const method = this.methodName(unit);
-
-         if (method === null) {
-            throw Error(`No set method defined for time unit ${unit} (ms)`);
-         }
-         const d = this.toDate();
-         let slice = 0;
-
-         switch (unit) {
-            case Duration.Second:
-               slice = 3;
-               break;
-            case Duration.Minute:
-               slice = 2;
-               break;
-            case Duration.Hour:
-               slice = 1;
-               break;
-            case Duration.Day:
-               slice = 0;
-               break;
-         }
-         d[method].apply(d, resetUnits.slice(slice));
-
-         return new DateTime(d);
-      };
-
-      switch (unit) {
-         case Duration.Year:
-            return atStartOf ? create(1, 0) : create(31, 11);
-         case Duration.Month:
-            return atStartOf ? create(1) : create(0, this.month + 1);
-         case Duration.Week:
-            // TODO: handle locale week start
-            // https://github.com/iamkun/dayjs/blob/dev/src/index.js#L184
-            const weekStartDay = 0;
-            const gap =
-               (this.dayOfWeek < weekStartDay
-                  ? this.dayOfWeek + 7
-                  : this.dayOfWeek) - weekStartDay;
-
-            return atStartOf
-               ? create(this.dayOfMonth - gap)
-               : create(this.dayOfMonth + (6 - gap));
-         case Duration.Day:
-         case Duration.Hour:
-         case Duration.Minute:
-         case Duration.Second:
-            return createAndSet(unit);
-         default:
-            return this.clone();
-      }
-   }
-
-   /**
     * DateTime at the beginning of given timespan.
     */
    startOf(unit: Duration): DateTime {
-      return this.boundary(unit, true);
+      return copyAndRound(this, unit, true);
    }
 
    /**
     * DateTime at the end of given timespan.
     */
    endOf(unit: Duration): DateTime {
-      return this.boundary(unit, false);
+      return copyAndRound(this, unit, false);
    }
 
    /**

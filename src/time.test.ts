@@ -2,7 +2,6 @@ import '@toba/tools';
 import MockDate from 'mockdate';
 import moment from 'moment';
 import { dateTime, Duration } from './';
-import { monthsApart } from './time';
 
 /**
  * Map `moment` durations to local `Duration`s
@@ -46,7 +45,7 @@ afterEach(() => {
    MockDate.reset();
 });
 
-test('MockDate should cause date() to always return same value', done => {
+test.only('MockDate should cause date() to always return same value', done => {
    const d1 = new Date();
    setTimeout(() => {
       const d2 = new Date();
@@ -59,12 +58,6 @@ test('parses date values in the same way moment does', () => {
    ['20110102', '2013-02-08'].forEach(d => {
       expect(dateTime(d).value).toBe(moment(d).valueOf());
    });
-});
-test('calculates months apart', () => {
-   const d1 = dateTime();
-   const d2 = d1.add(3, Duration.Month);
-   expect(d2.isSame(d1)).toBe(false);
-   expect(monthsApart(d1, d2)).toBe(3);
 });
 
 test('identifies leap years', () => {
@@ -109,7 +102,7 @@ test('matches moment constructor', () => {
 
 test('matches moment bad date values', () => {
    global.console.warn = jest.fn(); // suppress moment warnings
-   ['bad-date', null].forEach(d => {
+   ['bad-date', undefined].forEach(d => {
       expect(
          dateTime(d)
             .toString()
@@ -236,7 +229,7 @@ test('matches moment transforms', () => {
    expect(dateTime().toObject()).toEqual(moment().toObject());
 });
 
-it('exports JavaScript date object', () => {
+test('exports JavaScript date object', () => {
    const d = dateTime();
    const m = moment();
    const baseDate = d.toDate();
@@ -248,18 +241,18 @@ it('exports JavaScript date object', () => {
    expect(baseDate.toUTCString()).not.toBe(d.toString());
 });
 
-it('matches moment start/end when no change', () => {
-   expect(dateTime().startOf(null).value).toBe(
-      moment()
-         .startOf(null)
-         .valueOf()
-   );
-   expect(dateTime().endOf(null).value).toBe(
-      moment()
-         .endOf(null)
-         .valueOf()
-   );
-});
+// test('matches moment start/end when no change', () => {
+//    expect(dateTime().startOf(null).value).toBe(
+//       moment()
+//          .startOf(null)
+//          .valueOf()
+//    );
+//    expect(dateTime().endOf(null).value).toBe(
+//       moment()
+//          .endOf(null)
+//          .valueOf()
+//    );
+// });
 
 test('matches moment addition', () => {
    [
