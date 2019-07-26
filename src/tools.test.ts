@@ -1,7 +1,7 @@
 import '@toba/test';
 import { Month } from '@toba/tools';
 import { dateTime, Duration } from './';
-import { monthsApart, copyAndRound, roundDate } from './tools';
+import { monthsApart, copyAndRound, roundDate, daysInMonth } from './tools';
 
 test('rounds date to nearest time unit', () => {
    const d = new Date(2018, Month.September, 14, 7, 32, 12);
@@ -52,6 +52,29 @@ test('rounds date to nearest time unit', () => {
    expectEndTimes(yearEnd);
    expect(yearEnd.getMonth()).toBe(Month.December);
 });
+
+test('gets number of days in month', () => {
+   const months: Map<Month, number> = new Map([
+      [Month.January, 31],
+      [Month.February, 28],
+      [Month.March, 31],
+      [Month.April, 30],
+      [Month.May, 31],
+      [Month.June, 30],
+      [Month.July, 31],
+      [Month.August, 31],
+      [Month.September, 30],
+      [Month.October, 31],
+      [Month.November, 30],
+      [Month.December, 31]
+   ]);
+
+   months.forEach((days, m) => {
+      const d = new Date(2018, m, 14);
+      expect(daysInMonth(d)).toBe(days);
+   });
+});
+
 test('copies date-time with rounded time', () => {
    const dt = dateTime(new Date(2018, 8, 14, 7, 32, 12));
 

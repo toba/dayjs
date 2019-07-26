@@ -169,9 +169,9 @@ test('compares dates in terms of before/after/same', () => {
    expect(d2.isAfter(d1)).toBe(true);
 });
 
-test('matches moment valueOf()', () => {
-   const timestamp = 1523520536000;
-   expect(dateTime(timestamp).value).toBe(moment(timestamp).valueOf());
+test('validates dates', () => {
+   expect(dateTime().isValid()).toBe(true);
+   expect(dateTime('no-no').isValid()).toBe(false);
 });
 
 test('creates immutable clone when changing values', () => {
@@ -187,199 +187,220 @@ test('creates clone with same values as original', () => {
    expect(later.toString()).toBe(clone.toString());
 });
 
-test('matches moment constructor', () => {
-   expect(dateTime().value).toBe(moment().valueOf());
-
-   ['20130108', '2018-04-24', '2018-04-04T16:00:00.000Z'].forEach(t => {
-      expect(dateTime(t).value).toBe(moment(t).valueOf());
+describe('matches moment.js', () => {
+   test('valueOf()', () => {
+      const timestamp = 1523520536000;
+      expect(dateTime(timestamp).value).toBe(moment(timestamp).valueOf());
    });
-});
 
-// test.only('matches moment bad date values', () => {
-//    global.console.warn = jest.fn(); // suppress moment warnings
-//    ['bad-date', undefined].forEach(d => {
-//       expect(
-//          dateTime(d)
-//             .toString()
-//             .toLowerCase()
-//       ).toBe(
-//          moment(d)
-//             .toString()
-//             .toLowerCase()
-//       );
-//    });
-// });
+   test('constructor', () => {
+      expect(dateTime().value).toBe(moment().valueOf());
 
-test('validates dates', () => {
-   expect(dateTime().isValid()).toBe(true);
-   expect(dateTime('no-no').isValid()).toBe(false);
-});
+      [
+         '20130108',
+         '20111031',
+         '2018-04-24',
+         '2018-04-04T16:00:00.000Z'
+      ].forEach(t => {
+         const d = dateTime(t);
+         const m = moment(t);
+         expect(d.value).toBe(m.valueOf());
+         expect(d.toObject()).toEqual(m.toObject());
+      });
+   });
 
-test('matches moment shortcut properties', () => {
-   expect(dateTime().year).toBe(moment().year());
-   expect(dateTime().month).toBe(moment().month());
-   expect(dateTime().date).toBe(moment().date());
-   expect(dateTime().hour).toBe(moment().hour());
-   expect(dateTime().minute).toBe(moment().minute());
-   expect(dateTime().second).toBe(moment().second());
-   expect(dateTime().millisecond).toBe(moment().millisecond());
-   expect(dateTime().value).toBe(moment().valueOf());
-   expect(dateTime().unix).toBe(moment().unix());
-});
+   test('shortcut properties', () => {
+      expect(dateTime().year).toBe(moment().year());
+      expect(dateTime().month).toBe(moment().month());
+      expect(dateTime().date).toBe(moment().date());
+      expect(dateTime().hour).toBe(moment().hour());
+      expect(dateTime().minute).toBe(moment().minute());
+      expect(dateTime().second).toBe(moment().second());
+      expect(dateTime().millisecond).toBe(moment().millisecond());
+      expect(dateTime().value).toBe(moment().valueOf());
+      expect(dateTime().unix).toBe(moment().unix());
+   });
 
-test('matches moment duration updates', () => {
-   for (const [code, duration] of durations) {
-      expect(dateTime().set(duration, 11).value).toBe(
-         moment()
-            .set(code as moment.unitOfTime.Base, 11)
-            .valueOf()
+   test('duration updates', () => {
+      for (const [code, duration] of durations) {
+         expect(dateTime().set(duration, 11).value).toBe(
+            moment()
+               .set(code as moment.unitOfTime.Base, 11)
+               .valueOf()
+         );
+      }
+   });
+
+   test('formatting', () => {
+      expect(dateTime().format()).toBe(moment().format());
+      [
+         'YY-M-D / HH:mm:ss',
+         'YY',
+         'YYYY',
+         'M',
+         'MM',
+         'MMM',
+         'MMMM',
+         'D',
+         'DD',
+         'd',
+         'dddd',
+         'H',
+         'HH',
+         'm',
+         'mm',
+         's',
+         'ss',
+         'Z',
+         'ZZ'
+      ].forEach(pattern => {
+         expect(dateTime().format(pattern)).toBe(moment().format(pattern));
+      });
+   });
+
+   test('difference calculation', () => {
+      const d1 = dateTime();
+      const m1 = moment();
+      const d2 = dateTime().add(1000, Duration.Day);
+      const d3 = dateTime().subtract(1000, Duration.Day);
+      const m2 = moment().add(1000, 'days');
+      const m3 = moment().subtract(1000, 'days');
+
+      expect(d2.value).toBe(m2.valueOf());
+      expect(d3.value).toBe(m3.valueOf());
+
+      ['20110103', '2013-02-08'].forEach(d => {
+         const otherDate = dateTime(d);
+         const otherMoment = moment(d);
+         expect(d1.diff(otherDate)).toBe(m1.diff(otherMoment));
+      });
+
+      ['seconds', 'days', 'weeks', 'months', 'quarters', 'years'].forEach(
+         (u: moment.unitOfTime.Base) => {
+            const duration = units.get(u);
+            expect(duration).toBeDefined();
+            expect(d1.diff(d2, duration)).toBe(m1.diff(m2, u));
+            //expect(d1.diff(d2, duration, true)).toBe(m1.diff(m2, u, true));
+            expect(d1.diff(d3, duration)).toBe(m1.diff(m3, u));
+            //expect(d1.diff(d3, duration, true)).toBe(m1.diff(m3, u, true));
+         }
       );
-   }
-});
-
-test('matches moment formatting', () => {
-   expect(dateTime().format()).toBe(moment().format());
-   [
-      'YY-M-D / HH:mm:ss',
-      'YY',
-      'YYYY',
-      'M',
-      'MM',
-      'MMM',
-      'MMMM',
-      'D',
-      'DD',
-      'd',
-      'dddd',
-      'H',
-      'HH',
-      'm',
-      'mm',
-      's',
-      'ss',
-      'Z',
-      'ZZ'
-   ].forEach(pattern => {
-      expect(dateTime().format(pattern)).toBe(moment().format(pattern));
-   });
-});
-
-test('matches moment difference calculation', () => {
-   const d1 = dateTime();
-   const m1 = moment();
-   const d2 = dateTime().add(1000, Duration.Day);
-   const d3 = dateTime().subtract(1000, Duration.Day);
-   const m2 = moment().add(1000, 'days');
-   const m3 = moment().subtract(1000, 'days');
-
-   expect(d2.value).toBe(m2.valueOf());
-   expect(d3.value).toBe(m3.valueOf());
-
-   ['20110103', '2013-02-08'].forEach(d => {
-      const otherDate = dateTime(d);
-      const otherMoment = moment(d);
-      expect(d1.diff(otherDate)).toBe(m1.diff(otherMoment));
    });
 
-   ['seconds', 'days', 'weeks', 'months', 'quarters', 'years'].forEach(
-      (u: moment.unitOfTime.Base) => {
+   test('diff across months', () => {
+      const d1 = dateTime('20160115');
+      const d2 = dateTime('20160215');
+      const d3 = dateTime('20170115');
+      const m1 = moment('20160115');
+      const m2 = moment('20160215');
+      const m3 = moment('20170115');
+
+      ['months', 'quarters', 'years'].forEach((u: moment.unitOfTime.Base) => {
          const duration = units.get(u);
          expect(duration).toBeDefined();
          expect(d1.diff(d2, duration)).toBe(m1.diff(m2, u));
-         //expect(d1.diff(d2, duration, true)).toBe(m1.diff(m2, u, true));
+         expect(d1.diff(d2, duration, true)).toBe(m1.diff(m2, u, true));
+         expect(d1.diff(d2, duration)).toBe(m1.diff(m2, u));
+         expect(d1.diff(d2, duration, true)).toBe(m1.diff(m2, u, true));
          expect(d1.diff(d3, duration)).toBe(m1.diff(m3, u));
-         //expect(d1.diff(d3, duration, true)).toBe(m1.diff(m3, u, true));
-      }
-   );
-});
-
-test('matches moment diff across months', () => {
-   const d1 = dateTime('20160115');
-   const d2 = dateTime('20160215');
-   const d3 = dateTime('20170115');
-   const m1 = moment('20160115');
-   const m2 = moment('20160215');
-   const m3 = moment('20170115');
-
-   ['months', 'quarters', 'years'].forEach((u: moment.unitOfTime.Base) => {
-      const duration = units.get(u);
-      expect(duration).toBeDefined();
-      expect(d1.diff(d2, duration)).toBe(m1.diff(m2, u));
-      //expect(d1.diff(d2, duration, true)).toBe(m1.diff(m2, u, true));
-      expect(d1.diff(d2, duration)).toBe(m1.diff(m2, u));
-      //expect(d1.diff(d2, duration, true)).toBe(m1.diff(m2, u, true));
-      expect(d1.diff(d3, duration)).toBe(m1.diff(m3, u));
-      //expect(d1.diff(d3, duration, true)).toBe(m1.diff(m3, u, true));
+         expect(d1.diff(d3, duration, true)).toBe(m1.diff(m3, u, true));
+      });
    });
-});
 
-test('matches moment days-in-month calculation', () => {
-   expect(dateTime().daysInMonth).toBe(moment().daysInMonth());
-   expect(dateTime('20140201').daysInMonth).toBe(
-      moment('20140201').daysInMonth()
-   );
-});
-
-test('matches moment transforms', () => {
-   expect(dateTime().toArray()).toEqual(moment().toArray());
-   expect(dateTime().toJSON()).toBe(moment().toJSON());
-   expect(dateTime().toISOString()).toBe(moment().toISOString());
-   expect(dateTime().toObject()).toEqual(moment().toObject());
-});
-
-test('exports JavaScript date object', () => {
-   const d = dateTime();
-   const m = moment();
-   const baseDate = d.toDate();
-
-   expect(baseDate).toEqual(m.toDate());
-   expect(baseDate).toEqual(new Date());
-
-   baseDate.setFullYear(1970);
-   expect(baseDate.toUTCString()).not.toBe(d.toString());
-});
-
-test('matches moment addition', () => {
-   [
-      's',
-      'seconds',
-      'm',
-      'minutes',
-      'h',
-      'hours',
-      'w',
-      'weeks',
-      'd',
-      'days',
-      'M'
-      //'y'
-   ].forEach((u: moment.unitOfTime.Base) => {
-      expect(dateTime().add(5, units.get(u)).value).toBe(
-         moment()
-            .add(5, u)
-            .valueOf()
+   test('days-in-month calculation', () => {
+      expect(dateTime().daysInMonth).toBe(moment().daysInMonth());
+      expect(dateTime('20140201').daysInMonth).toBe(
+         moment('20140201').daysInMonth()
       );
    });
 
-   const literal = '20111031';
-   const d = dateTime(literal);
-   const m = moment(literal);
-   const dv = d.value;
-   const mv = m.valueOf();
+   test('transforms', () => {
+      expect(dateTime().toArray()).toEqual(moment().toArray());
+      expect(dateTime().toJSON()).toBe(moment().toJSON());
+      expect(dateTime().toISOString()).toBe(moment().toISOString());
+      expect(dateTime().toObject()).toEqual(moment().toObject());
+   });
 
-   expect(dv).toBe(mv);
-   expect(d.add(1, Duration.Month).value - dv).toBe(
-      m.add(1, 'months').valueOf() - mv
-   );
-   expect(d.add(1, Duration.Month).value).toBe(m.add(1, 'months').valueOf());
-});
+   test('exports JavaScript date object', () => {
+      const d = dateTime();
+      const m = moment();
+      const baseDate = d.toDate();
 
-test('matches moment subtraction', () => {
-   ['days'].forEach((u: moment.unitOfTime.Base) => {
-      expect(dateTime().subtract(1, units.get(u)).value).toBe(
-         moment()
-            .subtract(1, u)
-            .valueOf()
-      );
+      expect(baseDate).toEqual(m.toDate());
+      expect(baseDate).toEqual(new Date());
+
+      baseDate.setFullYear(1970);
+      expect(baseDate.toUTCString()).not.toBe(d.toString());
+   });
+
+   test('addition', () => {
+      [
+         's',
+         'seconds',
+         'm',
+         'minutes',
+         'h',
+         'hours',
+         'w',
+         'weeks',
+         'd',
+         'days',
+         'M'
+         //'y'
+      ].forEach((u: moment.unitOfTime.Base) => {
+         expect(dateTime().add(5, units.get(u)).value).toBe(
+            moment()
+               .add(5, u)
+               .valueOf()
+         );
+      });
+
+      const literal = '20111031';
+      const d = dateTime(literal);
+      const m = moment(literal);
+      const dv = d.value;
+      const mv = m.valueOf();
+      const before: moment.MomentObjectOutput = {
+         years: 2011,
+         months: 9,
+         date: 31,
+         hours: 0,
+         minutes: 0,
+         seconds: 0,
+         milliseconds: 0
+      };
+      const after: moment.MomentObjectOutput = {
+         years: before.years,
+         months: before.months + 1,
+         date: 30,
+         hours: before.hours,
+         minutes: before.minutes,
+         seconds: before.seconds,
+         milliseconds: before.milliseconds
+      };
+
+      expect(m.toObject()).toEqual(before);
+      expect(d.toObject()).toEqual(before);
+
+      const dAdd = d.add(1, Duration.Month);
+      const mAdd = m.add(1, 'months');
+
+      expect(dv).toBe(mv);
+
+      expect(mAdd.toObject()).toEqual(after);
+      expect(dAdd.toObject()).toEqual(after);
+
+      expect(dAdd.value - dv).toBe(mAdd.valueOf() - mv);
+      expect(dAdd.value).toBe(mAdd.valueOf());
+   });
+
+   test('subtraction', () => {
+      ['days'].forEach((u: moment.unitOfTime.Base) => {
+         expect(dateTime().subtract(1, units.get(u)).value).toBe(
+            moment()
+               .subtract(1, u)
+               .valueOf()
+         );
+      });
    });
 });

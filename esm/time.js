@@ -1,122 +1,5 @@
 import { is, leadingZeros, month, weekday } from '@toba/tools';
-/**
- * Convert date compatible values into an EcmaScript date. If text, the value
- * is expected to be ordered year, month, day.
- */
-export function parseDateValue(value) {
-    if (value === null) {
-        // null yields invalid date
-        return new Date(NaN);
-    }
-    if (value === undefined) {
-        return new Date();
-    }
-    if (is.date(value)) {
-        return value;
-    }
-    if (is.text(value)) {
-        const matches = value.match(/^(\d{4})-?(\d{2})-?(\d{1,2})$/);
-        if (is.array(matches)) {
-            // 2018-08-08 or 20180808
-            const d = parseInt(matches[3]);
-            const m = parseInt(matches[2]) - 1;
-            if (d == 0 || m < 0) {
-                throw Error(`Could not parse date: "${value}"`);
-            }
-            return new Date(parseInt(matches[1]), m, d);
-        }
-    }
-    return new Date(value);
-}
-/**
- * Map `Duration` to the `Date` method name used to update that time value.
- */
-const durationMethod = new Map([
-    [220752000000 /* Year */, 'setFullYear'],
-    [220752000000 /* Month */, 'setMonth'],
-    [86400000 /* Day */, 'setDate'],
-    [3600000 /* Hour */, 'setHours'],
-    [60000 /* Minute */, 'setMinutes'],
-    [1000 /* Second */, 'setSeconds'],
-    [1 /* Millisecond */, 'setMilliseconds']
-]);
-/**
- * Name of `Date.set` method for given time unit.
- */
-export function methodName(unit, isUTC = false) {
-    if (durationMethod.has(unit)) {
-        const name = durationMethod.get(unit);
-        return isUTC ? name.replace('set', 'setUTC') : name;
-    }
-    return null;
-}
-/**
- * Copy a `DateTime` and set it's values to either the beginning or end of the
- * given `Duration`. For example, if a `DateTime` in the middle of a month is
- * passed with `Duration.Month` and `atStartOf = true` then the output
- * `DateTime` will be the same except set to the first of the month.
- *
- * @param unit Most specific unit to retain (smaller units are reset)
- * @param atStartOf
- */
-export const copyAndSetTime = (unit, basis, atStartOf = true) => {
-    const method = methodName(unit, basis.isUTC);
-    /**
-     * Reset values for hours, minutes, seconds and milliseconds.
-     */
-    const resetUnits = atStartOf ? [0, 0, 0, 0] : [23, 59, 59, 999];
-    if (method === null) {
-        throw Error(`No set method defined for time unit ${unit} (ms)`);
-    }
-    const d = new Date(basis.toDate());
-    let slice = 0;
-    switch (unit) {
-        case 1000 /* Second */:
-            slice = 3;
-            break;
-        case 60000 /* Minute */:
-            slice = 2;
-            break;
-        case 3600000 /* Hour */:
-            slice = 1;
-            break;
-        case 86400000 /* Day */:
-            slice = 0;
-            break;
-        default:
-            throw Error(`Unknown duration: ${unit} ms`);
-    }
-    //d[method].apply(d, resetUnits.slice(slice));
-    return new DateTime(d);
-};
-/**
- * How many months apart are two dates.
- *
- * @see https://github.com/moment/moment/blob/c58511b94eba1000c1d66b23e9a9ff963ff1cc89/moment.js#L3277
- */
-export const monthsApart = (a, b) => {
-    const wholeMonths = (b.year - a.year) * 12 + (b.month - a.month);
-    const anchor = a.clone().add(wholeMonths, 220752000000 /* Month */);
-    let anchor2;
-    let adjust;
-    if (b.minus(anchor) < 0) {
-        anchor2 = a.clone().add(wholeMonths - 1, 220752000000 /* Month */);
-        adjust = b.minus(anchor) / anchor.minus(anchor2);
-    }
-    else {
-        anchor2 = a.clone().add(wholeMonths + 1, 220752000000 /* Month */);
-        adjust = b.minus(anchor) / anchor2.minus(anchor);
-    }
-    return Math.abs(wholeMonths + adjust);
-};
-export const absFloor = (n) => n < 0 ? Math.ceil(n) || 0 : Math.floor(n);
-export function zoneText(zoneOffset) {
-    const hour = zoneOffset * -1;
-    const replacer = hour > -10 && hour < 10 ? '$10$200' : '$1$200';
-    return String(hour)
-        .replace(/^(.)?(\d)/, replacer)
-        .padStart(5, '+');
-}
+import { parseDateValue, zoneText, monthsApart, absFloor, copyAndRound, setUnitValue } from './tools';
 /**
  * Convenience methods for working with dates and times, largely compatible with
  * the `Moment.js` library.
@@ -125,14 +8,14 @@ export function zoneText(zoneOffset) {
  */
 export class DateTime {
     constructor(dateValue) {
-        this.esDate = parseDateValue(dateValue);
+        this._date = parseDateValue(dateValue);
         this.initialize();
     }
     /**
      * Update local copies of `Date` values.
      */
     initialize() {
-        const d = this.esDate;
+        const d = this._date;
         this.timeZoneOffset = d.getTimezoneOffset() / 60;
         this.timeZone = zoneText(this.timeZoneOffset);
         this.year = d.getFullYear();
@@ -151,7 +34,7 @@ export class DateTime {
      * @see https://github.com/iamkun/dayjs/blob/master/src/index.js#L95
      */
     isValid() {
-        return this.esDate.toString() !== 'Invalid Date';
+        return this._date.toString() !== 'Invalid Date';
     }
     isLeapYear() {
         return ((this.year % 4 === 0 && this.year % 100 !== 0) || this.year % 400 === 0);
@@ -170,7 +53,7 @@ export class DateTime {
      * Day of month.
      */
     get date() {
-        return this.esDate.getDate();
+        return this._date.getDate();
     }
     /**
      * Number of seconds since midnight, January 1, 1970.
@@ -183,7 +66,7 @@ export class DateTime {
      * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/valueOf
      */
     valueOf() {
-        return this.esDate.getTime();
+        return this._date.getTime();
     }
     /**
      * Number of milliseconds since midnight, January 1, 1970.
@@ -192,100 +75,16 @@ export class DateTime {
         return this.valueOf();
     }
     /**
-     * DateTime at start or end of a given timespan.
-     * @param atStartOf Return start rather than end boundary
-     * @see https://github.com/iamkun/dayjs/blob/master/src/index.js#L158
-     */
-    boundary(unit, atStartOf = true) {
-        /**
-         * Create new DateTime for given month, day and year.
-         */
-        const create = (d, m = this.month, y = this.year) => {
-            const dt = new DateTime(this.isUTC ? Date.UTC(y, m, d) : new Date(y, m, d));
-            return atStartOf ? dt : dt.endOf(86400000 /* Day */);
-        };
-        switch (unit) {
-            case 220752000000 /* Year */:
-                return atStartOf ? create(1, 0) : create(31, 11);
-            case 220752000000 /* Month */:
-                return atStartOf ? create(1) : create(0, this.month + 1);
-            case 604800000 /* Week */:
-                // TODO: handle locale week start
-                // https://github.com/iamkun/dayjs/blob/dev/src/index.js#L184
-                const weekStartDay = 0;
-                const gap = (this.dayOfWeek < weekStartDay
-                    ? this.dayOfWeek + 7
-                    : this.dayOfWeek) - weekStartDay;
-                return atStartOf
-                    ? create(this.dayOfMonth - gap)
-                    : create(this.dayOfMonth + (6 - gap));
-            case 86400000 /* Day */:
-            case 3600000 /* Hour */:
-            case 60000 /* Minute */:
-            case 1000 /* Second */:
-                return copyAndSetTime(unit, this, atStartOf);
-            default:
-                return this.clone();
-        }
-    }
-    /**
      * DateTime at the beginning of given timespan.
      */
     startOf(unit) {
-        return this.boundary(unit, true);
+        return copyAndRound(this, unit, true);
     }
     /**
      * DateTime at the end of given timespan.
      */
     endOf(unit) {
-        return this.boundary(unit, false);
-    }
-    /**
-     * Update `DateTime` value.
-     * @param unit Unit of time to change
-     * @param value Value to change it to
-     * @see https://github.com/iamkun/dayjs/blob/master/src/index.js#L206
-     */
-    update(unit, value) {
-        const d = this.esDate;
-        let _;
-        switch (unit) {
-            case 220752000000 /* Year */:
-            case 220752000000 /* Month */:
-                const firstMonthDay = this.clone().set(86400000 /* Day */, 1);
-                const newDay = Math.min(this.date, firstMonthDay.daysInMonth);
-                const i = firstMonthDay.esDate;
-                if (unit == 220752000000 /* Year */) {
-                    _ = this.isUTC ? i.setUTCFullYear(value) : i.setFullYear(value);
-                }
-                else {
-                    _ = this.isUTC ? i.setUTCMonth(value) : i.setMonth(value);
-                }
-                firstMonthDay.initialize();
-                this.esDate = firstMonthDay.set(86400000 /* Day */, newDay).toDate();
-                break;
-            case 86400000 /* Day */:
-                value = this.date + (value - this.dayOfWeek);
-                _ = this.isUTC ? d.setUTCDate(value) : d.setDate(value);
-                break;
-            case 3600000 /* Hour */:
-                _ = this.isUTC ? d.setUTCHours(value) : d.setHours(value);
-                break;
-            case 60000 /* Minute */:
-                _ = this.isUTC ? d.setUTCMinutes(value) : d.setMinutes(value);
-                break;
-            case 1000 /* Second */:
-                _ = this.isUTC ? d.setUTCSeconds(value) : d.setSeconds(value);
-                break;
-            case 1 /* Millisecond */:
-                _ = this.isUTC
-                    ? d.setUTCMilliseconds(value)
-                    : d.setMilliseconds(value);
-                break;
-            default:
-                break;
-        }
-        return this.initialize();
+        return copyAndRound(this, unit, false);
     }
     /**
      * Update `DateTime` value.
@@ -294,31 +93,28 @@ export class DateTime {
      * @see https://github.com/iamkun/dayjs/blob/master/src/index.js#L233
      */
     set(unit, value) {
-        return is.number(value) ? this.clone().update(unit, value) : this;
+        return is.number(value)
+            ? new DateTime(setUnitValue(this.toDate(), unit, value, this.isUTC))
+            : this.clone();
     }
     /**
      * Special handling for month and year
      * @see https://github.com/moment/moment/pull/571
+     * @see https://github.com/iamkun/dayjs/blob/master/src/index.js#L241
      */
     add(value, unit = 1 /* Millisecond */) {
         switch (unit) {
-            case 220752000000 /* Year */:
+            case 31536000000 /* Year */:
                 return this.set(unit, this.year + value);
-            case 220752000000 /* Month */:
-                // let date = this.set(Duration.Day, 1).set(unit, this.month + value);
-                // date = date.set(
-                //    Duration.Day,
-                //    Math.min(this.dayOfMonth, date.daysInMonth)
-                // );
-                // return date;
+            case 2595600000 /* Month */:
                 return this.set(unit, this.month + value);
             case 604800000 /* Week */:
-                return this.set(86400000 /* Day */, this.date + value);
+                return this.set(86400000 /* Day */, this.date + value * 7);
             case 86400000 /* Day */:
-                return this.set(unit, this.date + value * 7);
+                return this.set(unit, this.date + value);
             default:
-                const nextTimeStamp = this.value + value * unit;
-                return new DateTime(nextTimeStamp);
+                // directly add milliseconds
+                return new DateTime(this.value + value * unit);
         }
     }
     subtract(value, unit = 1 /* Millisecond */) {
@@ -382,7 +178,7 @@ export class DateTime {
      * @see https://github.com/moment/moment/pull/1871
      */
     utcOffset() {
-        return -Math.round(this.esDate.getTimezoneOffset() / 15) * 15;
+        return -Math.round(this._date.getTimezoneOffset() / 15) * 15;
     }
     /**
      * @param precise Whether to return unit fractions
@@ -394,14 +190,14 @@ export class DateTime {
         }
         const diff = this.value - other.value;
         const zoneDiff = (other.utcOffset() - this.utcOffset()) * 60000 /* Minute */;
-        let result = monthsApart(this, other);
+        let result = monthsApart(other, this);
         switch (unit) {
-            case 220752000000 /* Year */:
+            case 31536000000 /* Year */:
                 result /= 12;
                 break;
-            case 220752000000 /* Month */:
+            case 2595600000 /* Month */:
                 break;
-            case 55188000000 /* Quarter */:
+            case 7952400000 /* Quarter */:
                 result /= 3;
                 break;
             case 604800000 /* Week */:
@@ -424,19 +220,19 @@ export class DateTime {
      * @see https://github.com/iamkun/dayjs/blob/master/src/index.js#L353
      */
     get daysInMonth() {
-        return this.endOf(220752000000 /* Month */).dayOfMonth;
+        return this.endOf(2595600000 /* Month */).dayOfMonth;
     }
     /**
      * Create new DateTime instance with same values.
      */
     clone() {
-        return new DateTime(this.esDate.getTime());
+        return new DateTime(this.value);
     }
     /**
      * Copy of the underlying EcmaScript date object.
      */
     toDate() {
-        return new Date(this.esDate);
+        return new Date(this.value);
     }
     toArray() {
         return [
@@ -453,10 +249,13 @@ export class DateTime {
         return this.toISOString();
     }
     toISOString() {
-        return this.esDate.toISOString();
+        return this._date.toISOString();
+    }
+    toUTCString() {
+        return this._date.toUTCString();
     }
     toString() {
-        return this.esDate.toUTCString();
+        return this.toISOString();
     }
     /**
      * `moment` compatible object representation.

@@ -13,7 +13,8 @@ import {
    zoneText,
    monthsApart,
    absFloor,
-   copyAndRound
+   copyAndRound,
+   setUnitValue
 } from './tools';
 
 /**
@@ -24,7 +25,7 @@ import {
  */
 export class DateTime {
    /** Internal EcmaScript date */
-   private esDate: Date;
+   private _date: Date;
    timeZoneOffset: number;
    timeZone: string;
    year: number;
@@ -38,7 +39,7 @@ export class DateTime {
    isUTC: boolean;
 
    constructor(dateValue?: DateLike) {
-      this.esDate = parseDateValue(dateValue);
+      this._date = parseDateValue(dateValue);
       this.initialize();
    }
 
@@ -46,7 +47,7 @@ export class DateTime {
     * Update local copies of `Date` values.
     */
    private initialize(): this {
-      const d = this.esDate;
+      const d = this._date;
       this.timeZoneOffset = d.getTimezoneOffset() / 60;
       this.timeZone = zoneText(this.timeZoneOffset);
       this.year = d.getFullYear();
@@ -67,7 +68,7 @@ export class DateTime {
     * @see https://github.com/iamkun/dayjs/blob/master/src/index.js#L95
     */
    isValid(): boolean {
-      return this.esDate.toString() !== 'Invalid Date';
+      return this._date.toString() !== 'Invalid Date';
    }
 
    isLeapYear(): boolean {
@@ -104,7 +105,7 @@ export class DateTime {
     * Day of month.
     */
    get date(): number {
-      return this.esDate.getDate();
+      return this._date.getDate();
    }
 
    /**
@@ -119,7 +120,7 @@ export class DateTime {
     * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/valueOf
     */
    valueOf() {
-      return this.esDate.getTime();
+      return this._date.getTime();
    }
 
    /**
@@ -147,86 +148,32 @@ export class DateTime {
     * Update `DateTime` value.
     * @param unit Unit of time to change
     * @param value Value to change it to
-    * @see https://github.com/iamkun/dayjs/blob/master/src/index.js#L206
-    */
-   private update(unit: Duration, value: number): this {
-      const d = this.esDate;
-      let _: number;
-
-      switch (unit) {
-         case Duration.Year:
-         case Duration.Month:
-            const firstMonthDay = this.clone().set(Duration.Day, 1);
-            const newDay = Math.min(this.date, firstMonthDay.daysInMonth);
-            const i = firstMonthDay.esDate;
-
-            if (unit == Duration.Year) {
-               _ = this.isUTC ? i.setUTCFullYear(value) : i.setFullYear(value);
-            } else {
-               _ = this.isUTC ? i.setUTCMonth(value) : i.setMonth(value);
-            }
-            firstMonthDay.initialize();
-            this.esDate = firstMonthDay.set(Duration.Day, newDay).toDate();
-
-            break;
-         case Duration.Day:
-            //value = this.date + (value - this.dayOfWeek);
-            _ = this.isUTC ? d.setUTCDate(value) : d.setDate(value);
-            break;
-         case Duration.Hour:
-            _ = this.isUTC ? d.setUTCHours(value) : d.setHours(value);
-            break;
-         case Duration.Minute:
-            _ = this.isUTC ? d.setUTCMinutes(value) : d.setMinutes(value);
-            break;
-         case Duration.Second:
-            _ = this.isUTC ? d.setUTCSeconds(value) : d.setSeconds(value);
-            break;
-         case Duration.Millisecond:
-            _ = this.isUTC
-               ? d.setUTCMilliseconds(value)
-               : d.setMilliseconds(value);
-            break;
-         default:
-            break;
-      }
-
-      return this.initialize();
-   }
-
-   /**
-    * Update `DateTime` value.
-    * @param unit Unit of time to change
-    * @param value Value to change it to
     * @see https://github.com/iamkun/dayjs/blob/master/src/index.js#L233
     */
    set(unit: Duration, value: number): DateTime {
-      return is.number(value) ? this.clone().update(unit, value) : this;
+      return is.number(value)
+         ? new DateTime(setUnitValue(this.toDate(), unit, value, this.isUTC))
+         : this.clone();
    }
 
    /**
     * Special handling for month and year
     * @see https://github.com/moment/moment/pull/571
+    * @see https://github.com/iamkun/dayjs/blob/master/src/index.js#L241
     */
    add(value: number, unit: Duration = Duration.Millisecond): DateTime {
       switch (unit) {
          case Duration.Year:
             return this.set(unit, this.year + value);
          case Duration.Month:
-            // let date = this.set(Duration.Day, 1).set(unit, this.month + value);
-            // date = date.set(
-            //    Duration.Day,
-            //    Math.min(this.dayOfMonth, date.daysInMonth)
-            // );
-            // return date;
             return this.set(unit, this.month + value);
          case Duration.Week:
             return this.set(Duration.Day, this.date + value * 7);
          case Duration.Day:
             return this.set(unit, this.date + value);
          default:
-            const nextTimeStamp = this.value + value * unit;
-            return new DateTime(nextTimeStamp);
+            // directly add milliseconds
+            return new DateTime(this.value + value * unit);
       }
    }
 
@@ -297,7 +244,7 @@ export class DateTime {
     * @see https://github.com/moment/moment/pull/1871
     */
    utcOffset() {
-      return -Math.round(this.esDate.getTimezoneOffset() / 15) * 15;
+      return -Math.round(this._date.getTimezoneOffset() / 15) * 15;
    }
 
    /**
@@ -353,14 +300,14 @@ export class DateTime {
     * Create new DateTime instance with same values.
     */
    clone(): DateTime {
-      return new DateTime(this.esDate.getTime());
+      return new DateTime(this.value);
    }
 
    /**
     * Copy of the underlying EcmaScript date object.
     */
    toDate(): Date {
-      return new Date(this.esDate);
+      return new Date(this.value);
    }
 
    toArray(): number[] {
@@ -380,11 +327,11 @@ export class DateTime {
    }
 
    toISOString() {
-      return this.esDate.toISOString();
+      return this._date.toISOString();
    }
 
    toUTCString() {
-      return this.esDate.toUTCString();
+      return this._date.toUTCString();
    }
 
    toString() {

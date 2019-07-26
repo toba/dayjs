@@ -53,7 +53,7 @@ export function roundDate(
       ? [0, 0, 0, 0]
       : [23, 59, 59, 999];
    /**
-    * Create new DateTime for given month, day and year.
+    * Create new `Date` for given month, day and year.
     */
    const create = (
       day: number,
@@ -163,4 +163,86 @@ export function zoneText(zoneOffset: number): string {
    return String(hour)
       .replace(/^(.)?(\d)/, replacer)
       .padStart(5, '+');
+}
+
+/**
+ * Number of days in the month.
+ * @see https://github.com/iamkun/dayjs/blob/master/src/index.js#L353
+ */
+export const daysInMonth = (d: Date): number =>
+   roundDate(d, Duration.Month, false).getDate();
+
+/**
+ * Update given unit of `Date` (returns same instance, not clone).
+ * @param unit Unit of time to change
+ * @param value Value to change it to
+ * @see https://github.com/iamkun/dayjs/blob/master/src/index.js#L206
+ */
+export function setUnitValue(
+   d: Date,
+   unit: Duration,
+   value: number,
+   isUTC = false
+): Date {
+   switch (unit) {
+      case Duration.Year:
+      case Duration.Month:
+         const dayOfMonth = d.getDate();
+         // set to first day so month or year update doesn't cause
+         // unexpected roll-over
+         setUnitValue(d, Duration.Day, 1, isUTC);
+
+         if (unit == Duration.Year) {
+            if (isUTC) {
+               d.setUTCFullYear(value);
+            } else {
+               d.setFullYear(value);
+            }
+         } else {
+            if (isUTC) {
+               d.setUTCMonth(value);
+            } else {
+               d.setMonth(value);
+            }
+         }
+         const restoreDay = Math.min(dayOfMonth, daysInMonth(d));
+         setUnitValue(d, Duration.Day, restoreDay, isUTC);
+         break;
+      case Duration.Day:
+         if (isUTC) {
+            d.setUTCDate(value);
+         } else {
+            d.setDate(value);
+         }
+         break;
+      case Duration.Hour:
+         if (isUTC) {
+            d.setUTCHours(value);
+         } else {
+            d.setHours(value);
+         }
+         break;
+      case Duration.Minute:
+         if (isUTC) {
+            d.setUTCMinutes(value);
+         } else {
+            d.setMinutes(value);
+         }
+         break;
+      case Duration.Second:
+         if (isUTC) {
+            d.setUTCSeconds(value);
+         } else {
+            d.setSeconds(value);
+         }
+         break;
+      case Duration.Millisecond:
+         if (isUTC) {
+            d.setUTCMilliseconds(value);
+         } else {
+            d.setMilliseconds(value);
+         }
+         break;
+   }
+   return d;
 }
